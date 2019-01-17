@@ -1,0 +1,6 @@
+---
+layout: post
+date:   2012-03-21
+categories:
+---
+Restored support for building/running <a href="zvm/vma">VMA</a> on z/OS.

@@ -1,0 +1,11 @@
+diff -ruN linux-2.4.19.SuSE.orig/include/linux/genhd.h linux-2.4.19.SuSE/include/linux/genhd.h
+--- linux-2.4.19.SuSE.orig/include/linux/genhd.h	2003-04-03 15:27:25.000000000 -0600
++++ linux-2.4.19.SuSE/include/linux/genhd.h	2003-04-03 14:46:16.000000000 -0600
+@@ -62,6 +62,7 @@
+ 	unsigned long start_sect;
+ 	unsigned long nr_sects;
+ 	devfs_handle_t de;              /* primary (master) devfs entry  */
++	int number;                     /* stupid old code wastes space  */
+ 
+ #ifdef CONFIG_BLK_STAT
+ 	/* Performance stats: */

@@ -1,0 +1,50 @@
+---
+layout: page
+title: VM IPL PARM Support
+permalink: /zlinux/vmparms.html
+---
+                  <h2>{{page.title}}</h2>
+                  <p>This patch adds the ability to supply kernel command line parameters via the PARM parameter of the VM IPL command.&nbsp; It only allows 64 bytes so it may not be appropriate for all command lines.&nbsp; But, I've found that most command lines are fairly short and, at the vary least, can be made generic and supplemented with additional parms from the IPL command. </p>
+                  <p>This one applies to kernel version 2.4.19 or 2.6.5 plus all IBM follow on patches.&nbsp; It includes support for s390 and s390x architectures.</p>
+                  <p>Download:</p>
+                  <p><a href="/files/linux-2.4.19.vmparms.diff">linux-2.4.19.vmparms.diff</a></p>
+                  <p><a href="/files/linux-2.6.5.vmparms.diff">linux-2.6.5.vmparms.diff</a></p>
+                  <p>And this one applies to the s390-tools-1.4.0 package.&nbsp; It's slightly more limited than the kernel patch as it won't work when IPLing from tape or the reader, but it's a heck of a lot easier to apply.</p>
+                  <p>After running your patched zipl, specify &quot;VM&quot; for the LOADPARM keyword and the configuration number followed by andy additional parameters for the PARM keyword.&nbsp; The menu will not be displayed and no prompting will occur, so if the configuration number is missing or invalid a wait state will be loaded. </p>
+                  <p>Example:</p>
+                  <p>IPL 5000 LOADPARM vm PARM 1 dasd=0.0.5000-0.0.5009 single</p>
+                  <p>This will IPL device 5000 and instructs (LOADPARM vm) the boot loader to use the parameters specified using the PARM keyword.</p>
+                  <p>Download:</p>
+                  <p><a href="/files/s390-tools-1.4.0.vmparms.diff">s390-tools-1.4.0.vmparms.diff</a></p>
+                  <p>Change History:</p>
+<br>
+                  <table class="tbl">
+                    <tr>
+                      <td class="col1">Date</td>
+                      <td class="col2">Change</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2005-05-13</td>
+                      <td class="col2">Added a new version that applies to zipl instead of the kernel.</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2004-05-27</td>
+                      <td class="col2">Added the version for the Linux kernel 2.6.5 + IBM follow on patches.</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2004-05-27</td>
+                      <td class="col2">Uploaded the correct patch this time...oopsie.</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2004-05-26</td>
+                      <td class="col2">Fixed IPLing from tape and the VM reader.&nbsp; (It only worked when IPLing from DASD.)</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2003-03-04</td>
+                      <td class="col2">Added support for shared segments and PARM eyecatcher</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2003-02-19</td>
+                      <td class="col2">Initial distribution</td>
+                    </tr>
+                  </table>

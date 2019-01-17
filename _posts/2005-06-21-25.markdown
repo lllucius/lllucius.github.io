@@ -1,0 +1,6 @@
+---
+layout: post
+date:   2005-06-21
+categories:
+---
+Added a fancy, schmancy (:-B) preliminary GUI version of the <a href="zvm/vma">VMA</a> utility.

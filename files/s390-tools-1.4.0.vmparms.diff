@@ -1,0 +1,129 @@
+diff -ruN s390-tools-1.4.0.orig/zipl/boot/menu.S s390-tools-1.4.0/zipl/boot/menu.S
+--- s390-tools-1.4.0.orig/zipl/boot/menu.S	2004-02-05 06:46:04.000000000 -0600
++++ s390-tools-1.4.0/zipl/boot/menu.S	2005-05-14 23:26:33.466970080 -0500
+@@ -67,6 +67,13 @@
+ 	ltr    %r3,%r3				# keyword 'PROMPT'?
+ 	jz     .LdopromptM1
+ 
++	chi    %r3,1				# keyword 'VM'?
++	jne    .LnokeywordM1
++
++	bras   %r14,_vm_parm
++	lr     %r8,%r2				# save menu result
++	j      .LendmenuM1
++
+ .LnokeywordM1:
+ 	lh     %r1,MENU_PARAM_FLAG(%r6)
+ 	ltr    %r1,%r1				# is menu enabled?
+@@ -455,6 +462,9 @@
+ .LskipspaceM6:
+ 	ic     %r0,0(%r2)			# skip leading spaces
+ 
++	ltr    %r0,%r0				# end of string?
++	jz     .LendM6
++
+ 	chi    %r0,0x40				# is current char a space?
+ 	jne    .LafterspaceM6
+ 
+@@ -469,6 +479,9 @@
+ .LtonumberM6:
+ 	ic     %r0,0(%r2)
+ 
++	ltr    %r0,%r0				# got a null?
++	jz     .LgotnumberM6			# valid end of number
++
+ 	chi    %r0,0x40				# got a space?
+ 	je     .LgotnumberM6			# valid end of number separator
+ 
+@@ -546,13 +559,26 @@
+ 	lr     %r2,%r6				# get param address
+ 	la     %r3,.LkeypromptM7-.LbaseM7(%r13)	# get keyword address
+ 	clst   %r2,%r3				# compare strings until '\0'
+-	brc    7,.LerrorM7			# not equal
++	brc    7,.LcheckvmM7			# not equal
+ 
+ 	lhi    %r2,1				# found keyword
+ 	sr     %r3,%r3
+ 
+ 	j      .LendM7
+ 
++.LcheckvmM7:
++	tm     LC_CPUID,0xff			# check for VM
++	jno    .LerrorM7
++
++	# check for keyword
++	clc    0(3,%r6),.LkeyvmM7-.LbaseM7(%r13)
++	jne    .LerrorM7			# not equal
++
++	lhi    %r2,1				# found keyword
++	lhi    %r3,1
++
++	j      .LendM7
++
+ .LerrorM7:
+ 	lhi    %r2,2				# failure
+ 
+@@ -567,9 +593,63 @@
+ .LkeypromptM7:
+ 	# 'prompt\0'
+ 	.byte  0x97, 0x99, 0x96, 0x94, 0x97, 0xa3, 0x00
++.LkeyvmM7:
++	# 'vm\0'
++	.byte  0xa5, 0x94, 0x00
+ 	.align 2
+ 
+ 
++#
++# Subroutine to interpret VM PARM value.
++#
++# Returns:
++#   R2  = configuration number to boot
++#
++
++_vm_parm:
++	stm    %r6,%r15,24(%r15)		# save registers
++
++	basr   %r13,0				# get base register
++.LbaseM8:
++	ahi    %r15,-96				# create stack frame
++
++	lhi    %r6,-1				# default to invalid config
++
++	lhi    %r3,64				# get maximum length
++	lhi    %r2,0x180			# get vm parm area address
++	bras   %r14,_menu_etoi
++
++	ltr    %r4,%r4				# test valid flag
++	jnz    .LendM8
++	lr     %r6,%r5				# save config number
++
++	sr     %r0,%r0
++	sr     %r1,%r1
++	l      %r4,.LparmlineM0-.LbaseM8(%r13)	# get address for parmline
++
++.LcopyM8:					# copy remaining characters
++	icm    %r0,1,0(%r2)
++	stc    %r0,0(%r1,%r4)
++	jz     .LcopyendM8
++	ahi    %r1,1
++	ahi    %r2,1
++	brct   %r3,.LcopyM8
++	stc    %r3,0(%r1,%r4)			# null terminate string
++
++.LcopyendM8:
++	ltr    %r3,%r1				# test/xfer input length
++	jz     .LendM8
++	lr     %r2,%r4
++	bras   %r14,_menu_tolower		# convert to lower case
++
++.LendM8:
++	lr     %r2,%r6				# configurtion number
++
++	lm     %r6,%r15,120(%r15)		# restore registers
++
++	br     %r14
++	
++
+ 	# Global constants
+ 
+ .LparmareaM0:

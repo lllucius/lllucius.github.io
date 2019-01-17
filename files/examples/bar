@@ -1,0 +1,2 @@
+#!/bin/sh
+rexx txt2pdf config bar.conf

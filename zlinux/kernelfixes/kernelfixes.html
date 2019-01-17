@@ -1,0 +1,96 @@
+---
+layout: page
+title: Kernel Fixes
+permalink: /zlinux/kernelfixes/
+---
+                  <h2>{{page.title}}</h2>
+                  <p>The following patches correct minor problems in the kernel.&nbsp; Most of them fix issues related to the interaction between the different kernel configuration options. </p>
+                  <p>Each patch applies to kernel version indicated.&nbsp; If you require a patch for a different kernel, let <a href="mailto:zlinux@homerow.net">me</a> know and I'll see what I can do.</p>
+                  <p>The Distro column indicates whether it applies against the standard IBM streams (Vanilla+) or a SLES8 installation.&nbsp; A date in this column indicates when the patch was included in the distribution.</p>
+<br>
+                  <table class="tbl">
+                    <tr>
+                      <td width="66" valign="top">Date</td>
+                      <td width="506" valign="top">Fix</td>
+                      <td width="68" valign="top">Distro</td>
+                      <td width="99" valign="top">Version (Click)</td>
+                    </tr>
+                    <tr>
+                      <td width="66" valign="top">2003-07-25</td>
+                      <td width="506" valign="top">Fixes a kernel OOPS caused by using &quot;transient&quot; data with the debug facility</td>
+                      <td width="68" valign="top">SLES8</td>
+                      <td width="99" valign="top"><a href="/files/linux-2.4.19-4SuSE-fix-debug-sprintf.diff">2.4.19.SuSE-80</a></td>
+                    </tr>
+                    <tr>
+                      <td width="66" valign="top">2003-07-23</td>
+                      <td width="506" valign="top">Fixes parsing problems in the DASD driver and adds some new features (see <a href="/files/linux-2.4.21-dasd-features.txt">this</a>)</td>
+                      <td width="68" valign="top">Vanilla+</td>
+                      <td width="99" valign="top"><a href="/files/linux-2.4.21-dasd-features.diff">2.4.21+ibm</a></td>
+                    </tr>
+                    <tr>
+                      <td width="66" valign="top">2003-07-21</td>
+                      <td width="506" valign="top">Small fix to prevent referencing page after release during partition recognition.</td>
+                      <td width="68" valign="top">Vanilla+</td>
+                      <td width="99" valign="top"><a href="/files/linux-2.4.21-fix-page-ref.diff">2.4.21+ibm</a></td>
+                    </tr>
+                    <tr>
+                      <td width="66" valign="top">2003-07-18</td>
+                      <td width="506" valign="top">Small patch to allow collecting I/O statistics for DASD devices.</td>
+                      <td width="68" valign="top">Vanilla+</td>
+                      <td width="99" valign="top"><a href="/files/linux-2.4.21-fix-disk-stat.diff">2.4.21+ibm</a></td>
+                    </tr>
+                    <tr>
+                      <td width="66" valign="top">2003-07-18</td>
+                      <td width="506" valign="top">Extremely minor patch to remove Kerntypes file during a make clean</td>
+                      <td width="68" valign="top">SLES8</td>
+                      <td width="99" valign="top"><a href="/files/linux-2.4.19-4SuSE-fix-kerntypes-clean.diff">2.4.19.SuSE-80</a></td>
+                    </tr>
+                    <tr>
+                      <td width="66" valign="top">2003-07-14</td>
+                      <td width="506" valign="top">Corrected comparison when determining which cache to use </td>
+                      <td width="68" valign="top">SLES8</td>
+                      <td width="99" valign="top"><a href="/files/linux-2.4.19-4SuSE-fix-ccwcache.diff">2.4.19.SuSE-80</a></td>
+                    </tr>
+                    <tr>
+                      <td width="66" valign="top">2003-07-13</td>
+                      <td width="506" valign="top">Added missing free_page() to DASD DIAG and FBA disciplines </td>
+                      <td width="68" valign="top">SLES8</td>
+                      <td width="99" valign="top"><a href="/files/linux-2.4.19-4SuSE-fix-dasd-free.diff">2.4.19.SuSE-80</a></td>
+                    </tr>
+                    <tr>
+                      <td width="66" valign="top">2003-07-13</td>
+                      <td width="506" valign="top">Added missing free_page() to DASD DIAG and FBA disciplines </td>
+                      <td width="68" valign="top">Vanilla+</td>
+                      <td width="99" valign="top"><a href="/files/linux-2.4.21-fix-dasd-free.diff">2.4.21+ibm</a></td>
+                    </tr>
+                    <tr>
+                      <td width="66" valign="top">2003-06-10</td>
+                      <td width="506" valign="top">Added missing kerntype support to install.sh scripts</td>
+                      <td width="68" valign="top">Vanilla+</td>
+                      <td width="99" valign="top"><a href="/files/linux-2.4.19-fix-install.diff">2.4.19+ibm</a></td>
+                    </tr>
+                    <tr>
+                      <td width="66" valign="top">2003-06-10</td>
+                      <td width="506" valign="top">Corrects parsing of &quot;auto_msck&quot; and &quot;del_auto_msck&quot; chandev verbs</td>
+                      <td width="68" valign="top">2003-06-13</td>
+                      <td width="99" valign="top"><a href="/files/linux-2.4.19-fix-verbs.diff">2.4.19+ibm</a></td>
+                    </tr>
+                    <tr>
+                      <td width="66" valign="top">2003-04-03</td>
+                      <td width="506" valign="top">Allows use of devfs.&nbsp; Apparently broken by SuSE's &quot;nopart-stat&quot; patch</td>
+                      <td width="68" valign="top">SLES8</td>
+                      <td width="99" valign="top"><a href="/files/linux-2.4.19.SuSE-fix-devfs.diff">2.4.19.SuSE-41</a></td>
+                    </tr>
+                    <tr>
+                      <td width="66" valign="top">2003-04-03</td>
+                      <td width="506" valign="top">Allows compiling IPV6 into kernel instead of module.</td>
+                      <td width="68" valign="top">SLES8</td>
+                      <td width="99" valign="top"><a href="/files/linux-2.4.19.SuSE-fix-ipv6.diff">2.4.19.SuSE-41</a></td>
+                    </tr>
+                    <tr>
+                      <td width="66" valign="top">2003-04-03</td>
+                      <td width="506" valign="top">Converts VMPOFF and VMHALT kernel parms to uppercase.</td>
+                      <td width="68" valign="top">Vanilla+</td>
+                      <td width="99" valign="top"><a href="/files/linux-2.4.19.toupper.diff">2.4.19+ibm</a></td>
+                    </tr>
+                  </table>

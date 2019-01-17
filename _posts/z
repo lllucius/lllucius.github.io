@@ -1,0 +1,148 @@
+td class="col1"#2018-07-30
+td class="col2"#Fixed a couple of TrueType font handling bugs in <a href="rexx/txt2pdf">TXT2PDF</a>.
+td class="col1"#2012-03-21
+td class="col2"#Restored support for building/running <a href="zvm/vma">VMA</a> on z/OS.
+td class="col1"#2012-03-20
+td class="col2"#Fixed a couple of critters in <a href="zvm/vma">VMA</a>.
+td class="col1"#2011-08-05
+td class="col2"#Fixed a couple of critters in <a href="zvm/vma">VMA</a>.
+td class="col1"#2011-02-17
+td class="col2"#Added some brief usage comments to <a href="zvm/smcli">smcli</a>
+td class="col1"#2011-02-11
+td class="col2"#Added the <a href="zvm/smcli">smcli</a> z/VM system managment command line utility
+td class="col1"#2010-08-25
+td class="col2"#Added -s (snaplen) support to <a href="zlinux/tcpdump-qeth">tcpdump-qeth</a> wrapper
+td class="col1"#2010-08-23
+td class="col2"#Created a standalone version of the <a href="zlinux/unionfs">Unionfs</a> filesystem for SLES
+td class="col1"#2010-08-07
+td class="col2"#Fixed a critter in <a href="zvm/kaos">KAOS</a> when more than 58 servers were defined.
+td class="col1"#2010-03-13
+td class="col2"#Fixed a critter in <a href="zvm/vma">VMA</a> when adding to existing archives.
+td class="col1"#2010-03-11
+td class="col2"#Added support for creating/updating VMARCs to <a href="zvm/vma">VMA</a>.
+td class="col1"#2010-02-24
+td class="col2"#Added the <a href="zvm/kaos">KAOS</a> system activation utility.
+td class="col1"#2009-06-03
+td class="col2"#Added Windows command line version to <a href="zvm/vma">VMA</a>.
+td class="col1"#2009-04-18
+td class="col2"#The <a href="zvm/vma">VMA</a> GUI is now fully Unicode capable.
+td class="col1"#2009-04-17
+td class="col2"#Several additions to <a href="rexx/txt2pdf">TXT2PDF</a>.
+td class="col1"#2009-04-02
+td class="col2"#Made <a href="zvm/vma">VMA</a> more compatible with newer versions of wxWidghets
+td class="col1"#2008-11-06
+td class="col2"#A few changes made to <a href="rexx/txt2pdf">TXT2PDF</a>.
+td class="col1"#2007-01-12
+td class="col2"#New version of <a href="zvm/vma">VMA</a>.
+td class="col1"#2006-05-05
+td class="col2"#New Mac version of <a href="zvm/vma">VMAgui</a> that opens viewer app on top of VMAgui. 
+td class="col1"#2006-04-23
+td class="col2"#New Mac version of VMAgui.&nbsp; Get the goodness <a href="zvm/vma">here</a>.
+td class="col1"#2005-07-10
+td class="col2"#VMAWin is now VMAgui and is based on wxWidgets.&nbsp; Get the goodness <a href="zvm/vma">here</a>.
+td class="col1"#2005-06-29
+td class="col2"#A couple of minor updates to <a href="zvm/vma">VMA</a>.
+td class="col1"#2005-06-27
+td class="col2"#Added a couple more options to <a href="zvm/vma">VMA</a>.
+td class="col1"#2005-06-23
+td class="col2"#New release of <a href="zvm/vma">VMA</a> and it now includes the Windows GUI version.
+td class="col1"#2005-06-21
+td class="col2"#Added a fancy, schmancy (:-B) preliminary GUI version of the <a href="zvm/vma">VMA</a> utility.
+td class="col1"#2005-06-16
+td class="col2"#Updated the <a href="zvm/vma">VMA</a> utility.
+td class="col1"#2005-06-13
+td class="col2"#Added the <a href="zvm/vma">VMA</a> utility to list and extract VMARC files on non-VM systems.
+td class="col1"#2005-05-13
+td class="col2"#Added a <a href="zlinux/vmparms">VMPARMS</a> patch that applies to zipl instead of the kernel.
+td class="col1"#2004-05-27
+td class="col2"#Added a version of <a href="zlinux/vmparms">VMPARMS</a> for the Linux 2.6.5 kernel.
+td class="col1"#2004-05-27
+td class="col2"#Uploaded the correct <a href="zlinux/vmparms">VMPARMS</a> patch this time.
+td class="col1"#2004-05-26
+td class="col2"#Fixed the <a href="zlinux/vmparms">VMPARMS</a> patch to allow IPLing from tape and the VM reader.
+td class="col1"#2004-05-26
+td class="col2"#Several features added to <a href="rexx/txt2pdf">TXT2PDF</a> including image tiling, BMP support, and a few others.
+td class="col1"#2004-03-18
+td class="col2"#Released <a href="asm/md5">MD5</a> into the Public Domain.
+td class="col1"#2004-03-03
+td class="col2"#Released <a href="asm/arc4">ARC4</a> into the Public Domain.
+td class="col1"#2003-10-31
+td class="col2"#Several features added to <a href="rexx/txt2pdf">TXT2PDF</a> including compression and encryption support in VM.&nbsp; Thanks Frank!!!
+td class="col1"#2003-08-12
+td class="col2"#Added TEXT DRAW type and fixed a bug introduced with the 08/10 update to <a href="rexx/txt2pdf">TXT2PDF</a>.
+td class="col1"#2003-08-10
+td class="col2"#Added DRAW and IMAGE keywords, stdio handling, and CMS PIPELINE stage to <a href="rexx/txt2pdf">TXT2PDF</a>.
+td class="col1"#2003-08-06
+td class="col2"#A few minor updates to <a href="rexx/txt2pdf">TXT2PDF</a> and the addition of a version in VMARC format.
+td class="col1"#2003-07-25
+td class="col2"#Restructured the underbelly of this here little site.&nbsp; If you were linking to it, you'll want to check your links.
+td class="col1"#2003-07-23
+td class="col2"#Added another <a href="zlinux/kernelfixes">Kernel Fix</a> (includes some enhancements as well)
+td class="col1"#2003-07-21
+td class="col2"#Updated <a href="zlinux/64bit-diag">DASD DIAG</a> discipline 64-bit support
+td class="col1"#2003-07-21
+td class="col2"#Added another <a href="zlinux/kernelfixes">Kernel Fix</a>
+td class="col1"#2003-07-18
+td class="col2"#Added a couple more <a href="zlinux/kernelfixes">Kernel Fixes</a>
+td class="col1"#2003-07-18
+td class="col2"#Updated <a href="zlinux/64bit-diag">DASD DIAG</a> discipline 64-bit support
+td class="col1"#2003-07-14
+td class="col2"#Added another <a href="zlinux/kernelfixes">Kernel Fix</a>
+td class="col1"#2003-07-14
+td class="col2"#Updated <a href="zlinux/64bit-diag">DASD DIAG</a> discipline 64-bit support
+td class="col1"#2003-07-13
+td class="col2"#Added 64-bit support to <a href="zlinux/64bit-diag">DASD DIAG</a> discipline
+td class="col1"#2003-07-13
+td class="col2"#Added another <a href="zlinux/kernelfixes">Kernel Fix</a>
+td class="col1"#2003-07-13
+td class="col2"#Updated <a href="asm/encode64">encode64</a> function
+td class="col1"#2003-06-10
+td class="col2"#Added <a href="zlinux/vipa_helpers">vipa-helpers</a> to the zLinux section
+td class="col1"#2003-06-10
+td class="col2"#Added a couple more <a href="zlinux/kernelfixes">Kernel Fixes</a>
+td class="col1"#2003-05-30
+td class="col2"#Added small <a href="zvm/qdi">patch</a> to John Hartmann's <a href="http://vm.marist.edu/~pipeline/index.html
+td class="col1"#2003-04-16
+td class="col2"#Added <a href="zlinux/tcpdump-qeth">tcpdump-qeth</a> wrapper patch and program
+td class="col1"#2003-04-03
+td class="col2"#Added <a href="zlinux/kernelfixes">Kernel Fixes</a> section
+td class="col1"#2003-03-17
+td class="col2"#Updated <a href="zlinux/multiboot">MultiBoot</a> patch
+td class="col1"#2003-03-14
+td class="col2"#Added <a href="zlinux/multiboot">MultiBoot</a> patch
+td class="col1"#2003-03-04
+td class="col2"#Updated <a href="zlinux/vmparms">VMPARM</a> patch
+td class="col1"#2003-02-19
+td class="col2"#Added <a href="zlinux">zLinux</a> section
+td class="col1"#2002-12-09
+td class="col2"#Added <a href="asm/hetutl">HETUTL</a> to the Assembler section
+td class="col1"#2002-12-09
+td class="col2"#Updated <a href="asm/zlib390">zlib390</a> and <a href="asm/bzlib390">bzlib390</a>
+td class="col1"#2002-12-09
+td class="col2"#Updated <a href="asm/zlibLE">zlibLE</a> and <a href="asm/bzlibLE">bzlibLE</a>
+td class="col1"#2002-12-08
+td class="col2"#Added <a href="asm/zlibLE">zlibLE</a> and <a href="asm/bzlibLE">bzlibLE</a> to the Assembler section
+td class="col1"#2002-12-08
+td class="col2"#More updates to <a href="asm/zlib390">zlib390</a> and <a href="asm/bzlib390">bzlib390</a>
+td class="col1"#2002-12-05
+td class="col2"#Minor updates to <a href="asm/zlib390">zlib390</a> and <a href="asm/bzlib390">bzlib390</a>
+td class="col1"#2002-12-02
+td class="col2"#Many updates to <a href="rexx/txt2pdf">TXT2PDF</a>
+td class="col1"#2002-10-26
+td class="col2"#Added ASCII carriage control support to <a href="rexx/txt2pdf">TXT2PDF</a>
+td class="col1"#2002-10-11
+td class="col2"#Added <a href="asm/arc4"<arc4</a> to the Assembler section
+td class="col1"#2002-10-11
+td class="col2"#Added <a href="asm/encode64">encode64</a> to the Assembler section
+td class="col1"#2002-10-11
+td class="col2"#Added <a href="asm/encode85">encode85</a> to the Assembler section
+td class="col1"#2002-10-11
+td class="col2"#Added <a href="asm/md5">md5</a> to the Assembler section
+td class="col1"#2002-10-11
+td class="col2"#Added <a href="asm/bzlib390">bzlib390</a> to the Assembler section
+td class="col1"#2002-10-08
+td class="col2"#Added <a href="asm/zlib390">zlib390</a> to the Assembler section
+td class="col1"#2002-10-08
+td class="col2"#Added <a href="rexx/txt2pdf">TXT2PDF</a> to the REXX section
+td class="col1"#2002-08-19
+td class="col2"#Yet another useless site is born

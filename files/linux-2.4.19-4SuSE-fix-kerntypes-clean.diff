@@ -1,0 +1,11 @@
+diff -ruN linux-2.4.19.SuSE.orig/Makefile linux-2.4.19.SuSE/Makefile
+--- linux-2.4.19.SuSE.orig/Makefile	2003-06-05 16:45:39.000000000 -0500
++++ linux-2.4.19.SuSE/Makefile	2003-07-18 21:03:20.000000000 -0500
+@@ -266,6 +266,7 @@
+ CLEAN_FILES = \
+ 	kernel/ksyms.lst include/linux/compile.h \
+ 	vmlinux System.map include/linux/config_data.h \
++	Kerntypes \
+ 	$(TMPPREFIX).tmp* \
+ 	drivers/char/consolemap_deftbl.c drivers/video/promcon_tbl.c \
+ 	drivers/char/conmakehash \

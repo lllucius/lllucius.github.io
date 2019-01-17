@@ -1,0 +1,6 @@
+---
+layout: post
+date:   2010-03-13
+categories:
+---
+Fixed a critter in <a href="zvm/vma">VMA</a> when adding to existing archives.

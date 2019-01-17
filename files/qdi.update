@@ -1,0 +1,56 @@
+./ I 00970000          $ 975000 5000                  05/30/03 18:54:27                 
+               i=x2d(i)                                                                 
+./ R 01820000 01830000 $ 1820000 990                  05/30/03 18:54:27                 
+encode1='''"/*ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'||,                  
+        '0123456789@#$-.!?_'                                                            
+encode2= '2345AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'||,                  
+        'AAAAAAAAAAAAAAAAAA'                                                            
+rsvd='ABBREV ABS ADDRESS APILOAD ARG B2X BITAND BITOR BITXOR BY C2D '||,                
+     'C2X CALL CENTER CENTRE CHARIN CHAROUT CHARS CMSFLAG COMPARE   '||,                
+     'CONDITION COPIES CSL D2C D2X DATATYPE DATE DBADJUST DBBRACKET '||,                
+     'DBCENTER DBCJUSTIFY DBCS DBLEFT DBRIGHT DBRLEFT DBRRIGHT      '||,                
+     'DBTODBCS DBTOSBCS DBUNBRACKET DBVALIDATE DBWIDTH DELSTR       '||,                
+     'DELWORD DIAG DIAG/DIAGRC DIAGRC DIGITS DO DROP ELSE END       '||,                
+     'ENGINEERING ERROR ERRORTEXT EXIT EXPOSE EXTERNAL EXTERNALS    '||,                
+     'FAILURE FIND FOR FOREVER FORM FORMAT FUZZ HALT IF INDEX INSERT'||,                
+     'INTERPRET ITERATE JUSTIFY LASTPOS LEAVE LEFT LENGTH LINEIN    '||,                
+     'LINEOUT LINES LINESIZE MAX MIN NAME NOP NOTREADY NOVALUE      '||,                
+     'NUMERIC OFF ON OPTIONS OTHERWISE OVERLAY PARSE POS PROCEDURE  '||,                
+     'PULL PUSH QUEUE QUEUED RANDOM RETURN REVERSE RIGHT SAY        '||,                
+     'SCIENTIFIC SELECT SIGN SIGNAL SOCKET SOURCE SOURCELINE SPACE  '||,                
+     'STORAGE STREAM STRIP SUBSTR SUBWORD SYMBOL SYNTAX THEN TIME TO'||,                
+     'TRACE TRANSLATE TRUNC UNTIL UPPER USERID VALUE VAR VERIFY     '||,                
+     'VERSION WHEN WHILE WITH WORD WORDINDEX WORDLENGTH WORDPOS     '||,                
+     'WORDS X2B X2C X2D XRANGE                                      '                   
+./ R 02140000 02150000 $ 2145990 5990                 05/30/03 18:54:27                 
+s.0='0135000000'                                                                02140000
+a.0='011600453A'                                                                02150000
+./ R 02190000 02200000 $ 2195990 5990                 05/30/03 18:54:27                 
+s.1='1011121111'                                                                02190000
+a.1='0200000000'                                                                02200000
+./ R 02240000 02250000 $ 2245990 5990                 05/30/03 18:54:27                 
+s.2='1111111111'                                                                02240000
+a.2='0000000000'                                                                02250000
+./ R 02290000 02300000 $ 2295990 5990                 05/30/03 18:54:27                 
+s.3='3303343333'                                                                02290000
+a.3='0020000000'                                                                02300000
+./ R 02340000 02350000 $ 2345990 5990                 05/30/03 18:54:27                 
+s.4='3333333333'                                                                02340000
+a.4='0000000000'                                                                02350000
+./ R 02390000 02400000 $ 2395990 5990                 05/30/03 18:54:27                 
+s.5='5555555555'                                                                02390000
+a.5='0006700000'                                                                02400000
+./ I 03590000          $ 3590700 700                  05/30/03 18:54:27                 
+action_A:                             /* Start of symbol */                             
+!=verify(encoded' ','A')                                                                
+c=c||left(line,!-1)                                                                     
+line=substr(line,!)                                                                     
+encoded=substr(encoded,!)                                                               
+If wordpos(translate(c),rsvd) > 0                                                       
+   Then                                                                                 
+      Do                                                                                
+         call load colour(4)          /* Make keyword green          */                 
+         append=colour(c.0)           /* And switch back             */                 
+      End                                                                               
+return                                                                                  
+                                                                                        

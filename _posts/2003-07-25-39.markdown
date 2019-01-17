@@ -1,0 +1,6 @@
+---
+layout: post
+date:   2003-07-25
+categories:
+---
+Restructured the underbelly of this here little site.&nbsp; If you were linking to it, you'll want to check your links.

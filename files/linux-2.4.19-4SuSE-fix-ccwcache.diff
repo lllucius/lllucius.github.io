@@ -1,0 +1,12 @@
+diff -ruN linux-2.4.19.SuSE.orig/drivers/s390/ccwcache.c linux-2.4.19.SuSE/drivers/s390/ccwcache.c
+--- linux-2.4.19.SuSE.orig/drivers/s390/ccwcache.c	2002-08-02 19:39:44.000000000 -0500
++++ linux-2.4.19.SuSE/drivers/s390/ccwcache.c	2003-07-15 03:43:57.000000000 -0500
+@@ -146,7 +146,7 @@
+ 
+ 	/* determine cache index for the requested size */
+ 	for (cachind = 0; cachind < CCW_NUMBER_CACHES; cachind ++ )
+-	   if ( size_needed < (SMALLEST_SLAB << cachind) ) 
++	   if ( size_needed <= (SMALLEST_SLAB << cachind) ) 
+ 			break;
+ 
+ 	/* Try to fulfill the request from a cache */

@@ -1,0 +1,23 @@
+#!/bin/bash
+
+i=0
+while read line
+do
+    case "${line}" in
+        *"col1"*)
+            dt=${line/*#}
+        ;;
+        *"col2"*)
+            i=$((i + 1))
+            ch=${line/*#}
+            cat >${dt}-${i} <<EOF
+---
+layout: post
+date:   ${dt}
+categories:
+---
+${ch}
+EOF
+        ;;
+    esac
+done <z

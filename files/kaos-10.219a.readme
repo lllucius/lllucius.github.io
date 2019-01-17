@@ -1,0 +1,458 @@
+=======================================================================
+KAOS - Kindly Activate Our System
+=======================================================================
+
+KAOS is a small system that is primarily designed to manage the startup
+of guests within the z/VM environment after an IPL.  It utilizes IBM's
+Operations Manager for its message and timer triggering.
+
+It may also be used as an extension to Operations Manager to provide
+conditional execution of the various Operations Manager commands.
+
+KAOS is developed on a Mac using ooRexx and a very crude simulation of
+Operations Manager processing.  But, so far, the environment has proven
+to be adequate for the majority of testing.  The only parts of the code
+that can't be tested on the Mac are the native z/VM commands.
+
+=======================================================================
+Copyright
+=======================================================================
+
+KAOS is copyright (C) 2010 by Leland Lucius
+
+This work is licensed under the Creative Commons Attribution-
+Noncommercial-No Derivative Works 3.0 United States License.
+
+To view a copy of this license, visit:
+
+http://creativecommons.org/licenses/by-nc-nd/3.0/us/
+
+Or send a letter to Creative Commons, 171 Second Street, Suite 300,
+San Francisco, California, 94105, USA.
+
+Since "commercial use" is not a well defined term (even Creative
+Commons can't define it), let me clarify:
+
+   Don't sell this software.
+   Don't bundle it with something else that is sold.
+   Don't sell services that specifically relate to this software.
+
+I don't consider day-to-day usage by your company or organization
+to be commercial use.  Run it on your mainframes, if it makes your
+lives easier, then that's just awesome.
+
+Please contact me if you're company or organization has a special
+licensing request as this is provided by the Creative Commons license.
+
+=======================================================================
+Disclaimer
+=======================================================================
+
+Your use of this software is at your own peril and is an agreement that
+I will not be held liable for any misfortune that befalls you, your
+computer systems, or your organization.
+
+=======================================================================
+Contact
+=======================================================================
+
+Please send suggestions or bug reports to:
+
+Leland Lucius
+kaos@homerow.net
+http://www.homerow.net
+
+=======================================================================
+Thanks
+=======================================================================
+
+For providing suggestions or bug reports, thanks go out to:
+
+Brian Peterson (for MANY suggestions while brainstorming)
+
+=======================================================================
+Installation
+=======================================================================
+
+KAOS is pretty easy to install and only has a few requirements.
+
+Since KAOS uses the APS 191 minidisk to feed commands to Operations
+Manager, that minidisk must be linkable in read-only mode by the main
+Operations Manager server, usually OPMGRM1.
+
+Also, the APS machine must be able to link to the main Operations
+Manager server's 191 minidisk.
+
+If you wish to run KAOS within its own APS machine, then you'll need
+to define it to z/VM.  Copying one of the standard APS machines (like
+OPMGRS1) should be sufficient.  Once defined, specify its name via
+an OPTIONS statement and whether you want KAOS to start it or not.
+
+Then copy the KAOS EXEC to a location that is accessible to both the
+Operations Manager main server and the APS machine you've defined.
+(Using an SFS directory for your OpsMgr configs and EXECs works very
+nicely.)
+
+And finally, create your KAOS config file.  It's best to put this in
+the same location as the EXEC, but you may choose to only make it
+accessible to the Operations Manager main server as that will be the
+user under which KAOS creates the initial state file.
+
+=======================================================================
+Usage
+=======================================================================
+
+KAOS can be started inside and outside of the Operations Manager main
+server (OPMGRM1).
+
+When running it outside of OPMGRM1, KAOS will load and validate the
+configuration file only.  This allows you to check any changes to the
+configuration.
+
+When running inside of OPMGRM1, you can use any method Operations
+Manager has to kick off KAOS, like a CMS, DEFRULE, or DEFSCHD.
+
+The only argument that KAOS supports is the ability to override the
+default configuration name.  This is done like so:
+
+  KAOS CONFIG fn ft ft
+
+The default configuration name used is "KAOS CONFIG *" so it will
+be found on any accessed disk available to OPMGRM1.  If the default
+name is acceptable, then just start KAOS without any arguments.
+
+=======================================================================
+Configuration
+=======================================================================
+
+KAOS is configured via a plain text file.  The following describes the
+statements that may be included within the file.
+
+Statements may be continued by placing a plus sign (+) as the last
+non-blank character of the line.
+
+-----------------------------------------------------------------------
+SERVER Statement
+-----------------------------------------------------------------------
+
+  SERVER NAME(name)
+        [ ACTEXIT(actexit) ]
+        [ MSG(msg) ]
+        [ PREREQS(prereqs) ]
+        [ TIMEOUT(timeout) ]
+
+The SERVER statement allows you to define a server name and associate
+various settings to that name.
+
+In its simplest form, it defines a z/VM user that should be started via
+the XAUTOLOG command.  If this form, you do not specify any parameters
+other than the required NAME().  The user is considered active as
+soon as it's started and any prereqs of the server will be satisfied.
+
+Example:
+
+  SERVER NAME(lnxwas01)
+
+In the second form, a message trigger is used to signal that the server
+has completed startup and is active.  You may also specify a timeout
+to give the server a reasonable length of time before considering the
+startup a failure.
+
+Example:
+
+  SERVER NAME(lnxwas01) MSG(runlevel 3 has been reached) TIMEOUT(30)
+
+With either form, you may use the ACTEXIT parameter to inform KAOS if
+the server should be started, is in an unknown state, or is active.
+
+When the ACTEXIT parameter is used, the NAME value does not have to
+specify a z/VM user.  It can be anything you like and the value will
+be passed as an argument to the exit.  This allows for more extensive
+state checking or for even checking the status of remote servers.
+
+Example:
+
+  SERVER NAME(rmtsrv01) ACTEXIT(pingit)
+  
+And finally, you can define prerequisites that must be resolved before
+a server can be started.  These prereqs refer to servers named on other
+SERVER statements.  Prereqs will be started first and, if any fail, the
+servers that were depending on the prereq will not be started.
+
+Example:
+
+  SERVER NAME(lnxwas01) PREREQS(lnxnfs01 lnxdb201)
+
+The SERVER statement has the following parameters:
+
+  NAME(name) - required
+
+    This the name that will be assigned to this server.  If using the
+    ACTEXIT parameter, it may specify anything you like, otherwise it
+    is the name of a z/VM user that will be started if not already
+    active.
+
+    DEFAULT:  None
+
+  ACTEXIT(actexit) - optional
+
+    This parameter names a Rexx EXEC that must return a value indicating
+    the state of the named server.  It is passed the NAME value as an
+    argument and must return one of the following values:
+
+      0 - The named server should be started.  If this value is returned
+          the named server must be a valid z/VM user name.  KAOS doesn't
+          check the name to ensure it is valid.
+
+      1 - The state of the named server is unknown and the server should
+          be considered down.  This will prevent any attempt at starting
+          it or any other servers that were depending on this one.
+
+      2 - The server is up and is in a good state.  This will prevent
+          KAOS from attempting to start the server and will mark the
+          server as active, thus satisfying any dependencies.
+
+    If the ACTEXIT parameter is not specified, then KAOS will simply
+    check to see if the specified name is currently running within z/VM.
+
+    DEFAULT:  None or the ACTEXIT value from a DEFAULTS statement
+
+  MSG(msg) - optional
+
+    The value specified will be used to create an Operations Manager
+    message rule.  This rule is used to indicate when the named server
+    has completed startup.  If a timeout value is also specified and
+    the message is not received within the time period, then KAOS will
+    mark the startup as failed and prevent any other dependent servers
+    from being started.
+
+    DEFAULT:  None or the MSG value from a DEFAULTS statement
+
+  PREREQS(prereqs) - optional
+
+    This parameter allows you to indicate that other servers must be
+    active before this one can start.  You may specify as many names
+    as is needed and the names need not be defined before this one.
+    Circular dependencies will be checked for and will cause KAOS to
+    terminate.
+
+    DEFAULT:  None
+
+  TIMEOUT(timeout) - optional
+
+    This specifies the number of minutes allowed to pass after the
+    server is started before its startup is marked as failed.  The
+    timeout is only used if a MSG value is also specified and if the
+    message is received before the timeout period expires, then the
+    startup will be marked as successful.
+
+    DEFAULT:  Unlimited or the TIMEOUT value from a DEFAULTS statement
+
+-----------------------------------------------------------------------
+DEFAULTS Statement
+-----------------------------------------------------------------------
+
+  DEFAULTS [ ACTEXIT(actexit) ]
+           [ MSG(msg) ]
+           [ TIMEOUT(timeout) ]
+           [ VAREXIT(varexit) }
+
+With the DEFAULTS statement, you specify the default value for several
+of the parameters on the SERVER statement.  See the SERVER statement
+for an explanation of their meaning.
+
+-----------------------------------------------------------------------
+OPTIONS Statement
+-----------------------------------------------------------------------
+
+    OPTIONS [ ENV(env) ]
+            [ LINKMODE(linkmode) ]
+            [ MAXCONN(maxconn) ]
+            [ MSGLVL(msglvl) ]
+            [ STARTENV(startenv) ]
+            [ VAREXIT(varexit) }
+
+The OPTIONS statement is used to specify various operating parameters
+that control how KAOS will execute.
+
+  ENV(env) - optional
+
+    This specifies the name of the Operations Manager environment in
+    which the KAOS main processing will execute.  It must be the actual
+    name of an action processing server.
+
+    DEFAULT:  KAOSSVM
+
+  LINKMODE(linkmode) - optional
+
+    This parameter specifies the link mode to use when KAOS needs to
+    issue commands within the Operations Manager main server, usually
+    OPMGRM1.  KAOS will write the commands to the A disk of the APS
+    server in which it is running and then have OPMGRM1 link to that
+    disk to read the commands.
+
+    DEFAULT:  K
+
+  MAXCONN(maxconn) - optional
+
+    This allows you to control the number of servers that KAOS will
+    start concurrently.  Note that due to server dependencies, KAOS may
+    not start this many servers at the same time, but it will never go
+    over this number.
+
+    DEFAULT:  5
+
+  MSGLVL(msglvl) - optional
+
+    This controls the level of messages produced by KAOS.  Any message
+    at a "lower" level than the specified value will not be displayed by
+    KAOS.  The allowed values in order of highest to lowest level are:
+
+      E - Error messages
+      W - Warning messages
+      I - Informational messages
+      D - Debug messages
+
+  STARTENV(startenv) - optional
+
+    This tells KAOS whether it should start the APS specified by the
+    ENV value.  It should be set to "N" if you have specified one of
+    the existing APS machines or "Y" if using a KAOS specific APS.
+
+    DEFAULT:  Y
+
+  VAREXIT(varexit) - optional
+
+    This specifies the name and optional parameters of a Rexx EXEC
+    that will be called when processing conditional statements.  If a
+    variable name is detected within an expression, KAOS will call this
+    exit before attempting to interpret the name internally.  This
+    allows you to add to or override the internal variables that KAOS
+    uses during evaluation.
+
+    The variable name will be passed as the last (or only) argument
+    and the exit should return one of the following values:
+
+      0 - The exit didn't recognize the name.  In this case, KAOS will
+          revert to the internally defined names.
+
+      1 - The exit has provided a value for the variable by emitting a
+          single line.  The line may contain any value needed for the
+          expression or it may be empty to set the variable value to
+          NULL.
+
+    DEFAULT:  None
+
+-----------------------------------------------------------------------
+IF/ELSE/ENDIF Statements
+-----------------------------------------------------------------------
+
+  IF [ ( ] expression [ ) ] [ AND | OR ] [ ( ] expression [ ) ] ...
+    ... executed statements if condition is true ...
+  ELSE
+    ... executed statements if condition is false ...
+  ENDIF
+
+Allows you to control which statements within the KAOS configuration
+file are to be bypassed or processed.
+
+Compound expressions may be used and IF statements may be nested.
+
+Bypassed statements are still scanned for syntax.
+
+Any KAOS or non-KAOS statement may be used within IF or ELSE statements.
+
+Expressions take the form:
+
+  lhs cond rhs
+
+Where "lhs" and "rhs" specify either a variable name or literal.
+
+Literals are specified bounded by double (") quotes.  Embedded quotes
+may be escaped by preceding them with a backslash (\) character.  Two
+sequential backslashes must be specified to include a backslash in the
+literal.
+
+Variable names are NOT case sensitive, but their values are.
+
+Internally defined variables are:
+
+  IPLPARMS - The value of the "QUERY IPLPARMS" CP command
+  CPUID    - The value of the "QUERY CPUID" CP command
+  GATE     - The name of the currently defined z/VM gateway
+
+The currently defined conditions are:
+
+  EQ - Equal
+  NE - Not equal
+  LT - Less than
+  LE - Less than or equal
+  GT - Greater than
+  GE - Greater than or equal
+  CO - lhs contains the rhs value
+  NC - lhs does not contain the rhs value
+  MA - lhs matches the rhs wildcard pattern.  The allowed wildcard
+       characters are:
+
+       * - matches 0 or more characters
+       ? - matches a single character
+
+  NM - lhs does not match the rhs wildcard pattern.
+
+Some examples:
+
+  IF iplparms co "KAOS-RUN"
+     execute these statements if the value returned by Q IPLPARMS
+     contains the phrase "KAOS-RUN" anywhere with the value
+  ENDIF
+
+  IF ( Gate EQ "VMTEST" )
+    ... executed statements if condition was true ...
+  ELSE
+    ... executed statements if condition was false ...
+  ENDIF
+
+  IF Gate EQ "VMTEST" AND CPUID ma "??02*"
+    ... executed statements if condition was true ...
+  ELSE
+    ... executed statements if condition was false ...
+  ENDIF
+
+  IF (Gate EQ "VMTEST" or Gate EQ "VMPROD") AND IPLPARMS CO "KAOS-RUN"
+    ... executed statements if condition was true ...
+  ELSE
+    ... executed statements if condition was false ...
+  ENDIF
+
+  IF Gate EQ "VMTEST"
+    IF IPLPARMS CO "KAOS-RUN"
+      ... executed statements if condition was true ...
+    ELSE
+      ... executed statements if condition was false ...
+    ENDIF
+  ELSE
+    ... executed statements if condition was false ...
+  ENDIF
+
+-----------------------------------------------------------------------
+Comment statement
+-----------------------------------------------------------------------
+
+An asterisk (*) in column in the first non-blank column is considered a
+comment line and will be bypassed.
+
+-----------------------------------------------------------------------
+Any other statement
+-----------------------------------------------------------------------
+
+Any other non-comment or blank line that KAOS encounters will be passed
+on to Operations Manager for execution.  Other than processing any line
+continuations, the statements are not scanned for correctness.
+
+=======================================================================
+History
+=======================================================================
+
+2010-02-03  KAOS is born
+2010-02-23  Initial release
+2010-08-07  Workaround REXXVARS 512 byte limit

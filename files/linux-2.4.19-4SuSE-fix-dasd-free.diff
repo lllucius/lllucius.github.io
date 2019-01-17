@@ -1,0 +1,62 @@
+diff -ruN /suse/linux-2.4.19.SuSE.orig/drivers/s390/block/dasd_diag.c linux-2.4.19.SuSE/drivers/s390/block/dasd_diag.c
+--- /suse/linux-2.4.19.SuSE.orig/drivers/s390/block/dasd_diag.c	2003-06-05 16:45:29.000000000 -0500
++++ linux-2.4.19.SuSE/drivers/s390/block/dasd_diag.c	2003-07-13 18:29:06.000000000 -0500
+@@ -292,7 +292,7 @@
+ 	dasd_diag_private_t *private;
+ 	dasd_diag_characteristics_t *rdc_data;
+ 	ccw_req_t *cqr;
+-	long *label;
++	long *label = NULL;
+ 	int sb;
+ 
+ 	if (device == NULL) {
+@@ -419,6 +419,8 @@
+ 	goto out;
+  fail:
+         if ( rc ) {
++                if (label)
++                        free_page ((unsigned long) label);
+                 kfree (device->private);
+                 device->private = NULL;
+         }
+@@ -533,7 +535,7 @@
+ static char *
+ dasd_diag_dump_sense (struct dasd_device_t *device, ccw_req_t * req)
+ {
+-	char *page = (char *) get_free_page (GFP_KERNEL);
++	char *page = (char *) get_free_page (GFP_ATOMIC);
+ 	int len;
+ 	if (page == NULL) {
+ 		return NULL;
+@@ -542,7 +544,8 @@
+ 		       "device %04X on irq %d: I/O status report:\n",
+ 		       device->devinfo.devno, device->devinfo.irq);
+ 
+-	return page;
++	free_page ((unsigned long) page);
++	return NULL;
+ }
+ 
+ dasd_discipline_t dasd_diag_discipline = {
+diff -ruN /suse/linux-2.4.19.SuSE.orig/drivers/s390/block/dasd_fba.c linux-2.4.19.SuSE/drivers/s390/block/dasd_fba.c
+--- /suse/linux-2.4.19.SuSE.orig/drivers/s390/block/dasd_fba.c	2003-06-05 16:45:29.000000000 -0500
++++ linux-2.4.19.SuSE/drivers/s390/block/dasd_fba.c	2003-07-13 21:25:58.000000000 -0500
+@@ -408,7 +408,7 @@
+ static char *
+ dasd_fba_dump_sense (struct dasd_device_t *device, ccw_req_t * req)
+ {
+-	char *page = (char *) get_free_page (GFP_KERNEL);
++	char *page = (char *) get_free_page (GFP_ATOMIC);
+ 	int len;
+ 	if (page == NULL) {
+ 		return NULL;
+@@ -417,7 +417,8 @@
+ 		       "device %04X on irq %d: I/O status report:\n",
+ 		       device->devinfo.devno, device->devinfo.irq);
+ 
+-	return page;
++	free_page ((unsigned long) page);
++	return NULL;
+ }
+ 
+ dasd_discipline_t dasd_fba_discipline = {

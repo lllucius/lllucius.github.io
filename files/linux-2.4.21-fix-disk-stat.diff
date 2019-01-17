@@ -1,0 +1,12 @@
+diff -ruN linux-2.4.21.orig/include/linux/kernel_stat.h linux-2.4.21/include/linux/kernel_stat.h
+--- linux-2.4.21.orig/include/linux/kernel_stat.h	2003-06-13 09:51:38.000000000 -0500
++++ linux-2.4.21/include/linux/kernel_stat.h	2003-07-18 21:32:53.000000000 -0500
+@@ -12,7 +12,7 @@
+  * used by rstatd/perfmeter
+  */
+ 
+-#define DK_MAX_MAJOR 16
++#define DK_MAX_MAJOR 96
+ #define DK_MAX_DISK 16
+ 
+ struct kernel_stat {

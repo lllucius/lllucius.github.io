@@ -1,0 +1,1265 @@
+diff -ruN s390-tools-1.1.6.orig/README.multiboot s390-tools-1.1.6/README.multiboot
+--- s390-tools-1.1.6.orig/README.multiboot	Wed Dec 31 18:00:00 1969
++++ s390-tools-1.1.6/README.multiboot	Wed Mar 19 00:51:42 2003
+@@ -0,0 +1,130 @@
++The "multiboot" patch adds the ability to IPL different configurations from
++the same device using the LOADPARM parameter on VMs IPL command or the
++"Load Parameter" field on the Hardware Management Console.
++
++It is especially useful when IPLing Linux in an LPAR.  You may setup several
++configs in /etc/zipl.conf, like a known good one, a test one, and maybe one
++that comes up in single user mode.  Then, if something untoward happens while
++testing, you have alternatives to get Linux back up.
++
++You can even maintain 1 zipl.conf to be used by several LPARs and/or VM guests.
++
++It was developed against version 1.1.6 of IBM's s390-tools package.  You may
++get the latest verion of s390-tools from:
++
++    http://www10.software.ibm.com/developerworks/opensource/linux390/index.shtml
++
++You will also need the latest version of the parsecfg library package.  It may
++be obtained from:
++
++    http://sourceforge.net/projects/parsecfg/
++
++At this time, it appears to only be available via CVS and this was how I got
++it.  If you are unable to sup it, you may use the older 3.6.7 version.  Just
++edit the zipl/src/zipl.c file and comment out the cfgFree() statement before
++building.
++
++Then simply untar everything, apply this patch, rebuild s390-tools according
++to the Readme.zipl file, and install.
++
++To use:
++
++Add as many sections to your zipl.conf as is needed.  Then execute zipl with
++the new "-m" argument.  All of the sections will be added to the bootmap file
++and, depaneding on whether a default section is specified, you may need to
++include a LOADPARM value at next IPL.
++
++If you specify a "default" section, either on the command line or in the
++"defaultboot" section, you will be able to IPL without specifying the LOADPARM
++and the named section will be used.
++
++If you do not specify a "default" section and you do not specify a LOADPARM
++or you specify a LOADPARM that doesn't match one of the section labels, an
++x'000A0000 E0F00E0F' disabled wait will be loaded.
++
++Since there can be only 1 "target" directory for all the sections in the
++zipl.conf file, you must specify the "target" directory either on the command
++line or in the "defaultboot" section.  Any "target" values found in other
++sections will be ignored.
++
++The "ramdisk" and "image" values may be specified in the "defaultboot" section
++as well to establish them as defaults.  Then you may or may not override them
++in the remaining sections.
++
++The value that is used for the LOADPARM is based on the first 8 characters of
++the section label or the value of the new "label" keyword.  Case doesn't matter.
++
++All "dumpto" sections will be ignored.
++
++Here is an example config file:
++
++    [defaultboot]
++    default=good
++    target=/boot
++    image=/boot/vmlinuz
++
++    [good]
++    parameters='dasd=4000-401F root=/dev/dasda1 noinitrd'
++
++    [test]
++    target=/boot/test             # This will be ignored
++    image=/boot/vmlinuz.new
++    parmfile=/boot/parmfile.new
++
++    [initrd]
++    label=ramdisk
++    ramdisk=/boot/initrd
++
++Issuing the command:
++
++    zipl -m
++        
++Would produce the following:
++
++    Building bootmap          : /boot/bootmap
++    Processing section        : good
++    adding file to bootmap    : /boot/vmlinuz located at 0x00010000
++    adding file to bootmap    : /boot/parmfile.1 located at 0x00001000
++    Processing section        : test
++    adding file to bootmap    : /boot/vmlinuz.new located at 0x00010000
++    adding file to bootmap    : /boot/parmfile.new located at 0x00001000
++    Processing section        : initrd
++    adding file to bootmap    : /boot/vmlinuz located at 0x00010000
++    adding file to bootmap    : /boot/initrd located at 0x00800000
++    Trailer entries used      : 14 out of 256
++    Bootloader for ECKD type devices with z/OS compatible layout installed.
++    Syncing disks....
++    ...done
++
++Then, when you IPL you may choose which config you want to use by omitting
++a LOADPARM altogether, in which case the "good" config will be used.  Or you
++may specify "good", "test", and "ramdisk" as the LOADPARM to specifically
++select one of the configs.
++
++That's about all there is.  If you have questions or suggestions, please don't
++hesitate to email me.
++
++Leland Lucius
++multiboot@homerow.net
++
++==============
++
++The latest version of this patch can be had from:
++
++    http://www.homerow.net/projects/zlinux/multiboot.htm
++
++Mark Post has kindly offered to mirror the patch over at:
++
++    http://linuxvm.org/Patches/index.html
++
++Change History
++03.077  Added an additional check during interrupt processing to verify the
++        interrupt was the result of the query.  (Thanks to Jan Jaeger!)
++03.077  Fixed a bogus branch (found when adding above check)
++03.077  Fixed a few typos in this readme and program comments
++03.077  Removed some unneeded variables from zipl.c
++03.077  Added checks prior to calling strdup() to prevent segfaults
++03.077  Moved parsecfg data outside of function to get rid of compiler
++        warning
++03.077  A few other minor cleanups
++03.073  First public release
+diff -ruN s390-tools-1.1.6.orig/zipl/Makefile s390-tools-1.1.6/zipl/Makefile
+--- s390-tools-1.1.6.orig/zipl/Makefile	Thu Jun 28 09:33:42 2001
++++ s390-tools-1.1.6/zipl/Makefile	Fri Mar 14 16:08:07 2003
+@@ -5,6 +5,8 @@
+ ifeq ($(shell if [ -f include/parsecfg.h ]; then echo ok; fi),ok)
+ HAVE_PARSECFG=1
+ export HAVE_PARSECFG
++MULTIBOOT=1
++export MULTIBOOT
+ endif
+ endif
+ 
+diff -ruN s390-tools-1.1.6.orig/zipl/boot/common.S s390-tools-1.1.6/zipl/boot/common.S
+--- s390-tools-1.1.6.orig/zipl/boot/common.S	Tue Jan  8 10:49:41 2002
++++ s390-tools-1.1.6/zipl/boot/common.S	Wed Mar 19 00:09:51 2003
+@@ -5,6 +5,11 @@
+ #
+ 
+ # some definitions from kernel land
++__LC_EXT_NEW_PSW  = 0x058
++__LC_PGM_NEW_PSW  = 0x068
++__LC_EXT_INT_CODE = 0x086
++__LC_EXT_PARAMS   = 0x080
++
+ __LC_IPLDEV  = 0xC6C
+ __LC_PANIC_MAGIC= 0xE00
+ IPL_DEVICE   = 0x10404
+@@ -36,6 +41,9 @@
+ _start: stm    %r0,%r15,0x180           # store all registers 
+         basr   %r13,0
+ 0:      l      %r15,3f-0b(%r13)         # load end of stack address
++
++        bas    %r14,_get_loadparm-0b(%r13)
++
+         l      %r11,0xb8                # load ipl device subchannel id
+ 	lr     %r2,%r11
+ 	bas    %r14,_enable_device-0b(%r13)
+@@ -47,9 +55,11 @@
+ 	la     %r12,0(%r5)              # FIXME: provide the correct offset
+         bas    %r14,_load_direct-0b(%r13)
+ 1:      lm     %r2,%r5,0(%r12)          # load 16 bytes = one load descriptor
+-        cl     %r4,6f-0b(%r13)          # check type range
+-        bh     2f
+-        sll    %r4,2
++        cl     %r4,6f-0b(%r13)          # "always execute" type?
++        bh     7f-0b(%r13)              # yes
++        clc    .label-0b(8,%r13),.lparm-0b(%r13) # processing desired config?
++        bne    2f-0b(%r13)              # no
++7:      sll    %r4,2
+         l      %r1,5f-0b(%r4,%r13)      # function pointer according to type
+ 	lr     %r4,%r11                 # pass subchannel id
+         bas    %r14,0(%r1)
+@@ -61,7 +71,10 @@
+ 	.long  _load_parmfile           # type 1: parameter file
+ 	.long  _load_ramdisk            # type 2: initial ramdisk
+ 	.long  _jump_target             # type 3: jump to target
++	.long  _do_label                # type 5: config label
++	.long  _do_eot                  # type 4: end of table
+ 6:      .long  3                        # highest index in list
++                                        # anything higher always gets executed
+ 
+ _load_kernel:
+         stm    %r6,%r15,24(%r15)
+@@ -123,6 +136,99 @@
+         lr     %r14,%r5                 # make branch target return address
+ 	b      _disable_device-0b(%r1)
+ 
++#
++# Retrieve load parm
++#
++_get_loadparm:
++        stm    %r6,%r15,24(%r15)        # save registers
++        basr   %r13,0                   # set base
++0:      s      %r15,51f-0b(%r13)        # reserve savearea
++        mvc    .lparm-0b(8,%r13),59f-0b(%r13)   # init loadparm
++        mvc    84f-0b(8,%r13),__LC_EXT_NEW_PSW  # save new ext psw
++        mvc    85f-0b(8,%r13),__LC_PGM_NEW_PSW  # save new pgm psw
++        mvc    __LC_EXT_NEW_PSW(8),80f-0b(%r13) # new ext psw
++        mvc    __LC_PGM_NEW_PSW(8),81f-0b(%r13) # new pgm psw if n/SERVC sup
++        lctl   %c0,%c0,56f-0b(%r13)     # enable ext subclass
++        la     %r3,53f-0b(%r13)         # ptr to function codes
++        l      %r2,52f-0b(%r13)         # ptr to SCCB
++#
++1:      mvc    0(8,%r2),54f-0b(%r13)    # init SCCB header
++        icm    %r1,0x0f,0(%r3)          # get/test function code
++        bz     10f-0b(%r13)             # load failure psw
++        .long  0xb2200012               # SERVC R1,R2
++        bc     4,20f-0b(%r13)           # sync - success
++        bc     2,4f-0b(%r13)            # busy - try again
++        bc     1,10f-0b(%r13)           # not op - error
++#
++2:      lpsw   82f-0b(%r13)             # wait for external int
++3:      clc    __LC_EXT_INT_CODE(2),57f-0b(%r13) # service signal?
++        bne    2b-0b(%r13)              # wait some more
++        ni     __LC_EXT_PARAMS+3,0xfc   # kill flags
++        cl     %r2,__LC_EXT_PARAMS      # our paramter?
++        bne    2b-0b(%r13)              # wait some more
++#
++        clc    6(2,%r2),58f-0b(%r13)    # good completion?
++        be     20f-0b(%r13)             # yes
++4:      la     %r3,4(%r3)               # bump index
++        b      1b-0b(%r13)              # try next
++#
++10:     lpsw   83f-0b(%r13)             # not op - load disable wait
++#
++20:     oc     24(8,%r2),59f-0b(%r13)   # convert to uppercase (sort of)
++        mvc    .lparm-0b(8,%r13),24(%r2) # save loadparm
++        mvc    .label-0b(8,%r13),24(%r2) # make it the current config
++21:     mvc    __LC_EXT_NEW_PSW(8),84f-0b(%r13) # restore new ext psw
++        mvc    __LC_PGM_NEW_PSW(8),85f-0b(%r13) # restore new pgm psw
++        lctl   %c0,%c0,55f-0b(%r13)     # disable ext subclass
++        lm     %r6,%r15,120(%r15)       # restore regs
++        br     %r14                     # return
++#
++        .align 4
++51:     .long  96
++52:     .long  0x00008000               # dest
++53:     .long  0x00120001               # read scp info (IFL version???)
++        .long  0x00120001               # 2nd try
++        .long  0x00020001               # read scp info (STD version)
++        .long  0x00020001               # 2nd try
++        .long  0x00000000               # give up
++54:     .long  0x10008000               # SCCB header
++55:     .long  0x00000000               # SCCB header / cr0 reset
++56:     .long  0x00000200               # cr0 = ext subclass enabled
++57:     .word  0x2401                   # service signal
++58:     .word  0x0010                   # information returned
++59:     .fill  8,1,0x40                 # 8 EBCDIC spaces
++        .align 8
++80:     .long  0x00080000,3b            # ext new psw
++81:     .long  0x00080000,21b           # pgm new psw - use default entry
++82:     .long  0x010a0000,0x00000000    # wait psw
++83:     .long  0x000a0000,0xdeadb220    # disable wait
++84:     .long  0,0                      # saved ext new psw
++85:     .long  0,0                      # saved pgm new psw
++
++#
++# End of bootmap table reached - force disabled wait
++#
++_do_eot:
++        basr   %r13,0                   # set base
++0:      l      %r2,1f-0b(%r13)          # get wait state code
++        b      _panik-0b(%r13)          # error
++1:      .long  0xe0f00e0f               # code
++#
++# Found a configuration label - match it against loadparm
++#
++_do_label:
++        st     %r13,24(%r15)            # save base
++        basr   %r13,0                   # base register
++0:      stm    %r2,%r3,.label-0b(%r13)  # make it the current config
++        l      %r13,24(%r15)            # restore base
++        br     %r14
++        .align 8
++.lparm: .fill  8,1,0x40                 # load parm - 8 EBCDIC blanks
++.label: .fill  8,1,0x40                 # current config
++#
++# Don't know what's going to follow macro, so...
++#
++        .align 8                        # Just in case
+         .endm
+ 
+ #
+diff -ruN s390-tools-1.1.6.orig/zipl/include/ipl_stage1.h s390-tools-1.1.6/zipl/include/ipl_stage1.h
+--- s390-tools-1.1.6.orig/zipl/include/ipl_stage1.h	Tue Mar 27 03:26:18 2001
++++ s390-tools-1.1.6/zipl/include/ipl_stage1.h	Fri Mar 14 16:08:07 2003
+@@ -18,6 +18,10 @@
+ #define __IPL_STAGE1_BOOT_TYPE_PARMLINE 1
+ #define __IPL_STAGE1_BOOT_TYPE_INITRD 2
+ #define __IPL_STAGE1_BOOT_TYPE_EXECUTE 3
++#ifdef MULTIBOOT
++#define __IPL_STAGE1_BOOT_TYPE_LABEL 4
++#define __IPL_STAGE1_BOOT_TYPE_EOT 5
++#endif
+ 
+ #define __IPL_STAGE1_LOAD_ADDRESS 0x18 /* where to load the STAGE1 code */
+ 
+diff -ruN s390-tools-1.1.6.orig/zipl/include/zipl.h s390-tools-1.1.6/zipl/include/zipl.h
+--- s390-tools-1.1.6.orig/zipl/include/zipl.h	Fri May 10 03:36:14 2002
++++ s390-tools-1.1.6/zipl/include/zipl.h	Fri Mar 14 16:08:07 2003
+@@ -92,6 +92,9 @@
+     char* parameters;
+     dev_t target_dev;
+     __ipl_blocklist_container_u loaderparams;
++#ifdef MULTIBOOT
++    int multiboot;
++#endif
+ } zipl_options_t;
+ 
+ /* type for partition information */
+@@ -105,6 +108,27 @@
+     int ssize;
+     ssize_t devsize;
+ } zipl_partn_info_t;
++
++/* type for file information */
++typedef struct _zipl_file_info_t {
++    struct _zipl_file_info_t *next;
++    dev_t device;
++    ino_t inode;
++    __ipl_blocklist_container_u bootlist;
++} zipl_file_info_t;
++
++/* type for parm information */
++typedef struct _zipl_parm_info_t {
++    struct _zipl_parm_info_t *next;
++    char *parms;
++    char *file;
++} zipl_parm_info_t;
++
++/* type for label information */
++typedef struct _zipl_label_info_t {
++    struct _zipl_label_info_t *next;
++    char name[ 8 ];
++} zipl_label_info_t;
+ 
+ /* function prototypes from section misc helper functions */
+ inline void* zipl_malloc (int);
+diff -ruN s390-tools-1.1.6.orig/zipl/src/Makefile s390-tools-1.1.6/zipl/src/Makefile
+--- s390-tools-1.1.6.orig/zipl/src/Makefile	Wed Jul 25 11:01:56 2001
++++ s390-tools-1.1.6/zipl/src/Makefile	Wed Mar 19 00:38:42 2003
+@@ -1,13 +1,12 @@
+ all: zipl
+ 
+ ifdef HAVE_PARSECFG
+-zipl:	libparsecfg.so zipl.c
+-	$(CC) -DHAVE_PARSECFG -I$(KERNEL_DIR)/include -I../include -lparsecfg \
+-	      -L. -O2 zipl.c -o zipl
++zipl:	parsecfg.o zipl.c
++	$(CC) -DMULTIBOOT -DHAVE_PARSECFG -I$(KERNEL_DIR)/include -I../include \
++	      -L. -O2 zipl.c parsecfg.o -o zipl
+ 
+-libparsecfg.so:	parsecfg.c
+-	$(CC) -I../include -O2 -c  -fPIC -DPIC parsecfg.c -o parsecfg.lo
+-	$(CC) -shared  parsecfg.lo  -lc  -Wl,-soname -Wl,$@ -o $@
++parsecfg.o:	parsecfg.c
++	$(CC) -I../include -O2 -c parsecfg.c -o parsecfg.o
+ else
+ zipl:	zipl.c
+ 	$(CC) -I$(KERNEL_DIR)/include -I../include -L. -O2 zipl.c -o zipl
+diff -ruN s390-tools-1.1.6.orig/zipl/src/zipl.c s390-tools-1.1.6/zipl/src/zipl.c
+--- s390-tools-1.1.6.orig/zipl/src/zipl.c	Fri Sep 20 06:52:43 2002
++++ s390-tools-1.1.6/zipl/src/zipl.c	Wed Mar 19 00:51:57 2003
+@@ -17,6 +17,11 @@
+ #include <zipl.h>
+ #include <getopt.h>
+ #include <errno.h>
++#ifdef MULTIBOOT
++#include <stdarg.h>
++#include <string.h>
++#include <ctype.h>
++#endif
+ #ifdef HAVE_PARSECFG
+ #include <parsecfg.h>
+ #endif
+@@ -38,7 +43,11 @@
+ zipl_options_t options; 
+ 
+ /* getopt string */
++#ifdef MULTIBOOT
++#define zipl_getopt_string "c:t:i:r:p:d:hm"
++#else
+ #define zipl_getopt_string "c:t:i:r:p:d:h"
++#endif
+ /* struct options for getopt */
+ static struct option zipl_getopt_long_options[]={
+ #ifdef HAVE_PARSECFG
+@@ -49,6 +58,9 @@
+     { "ramdisk",1, 0, 'r'},
+     { "parmfile",1,0, 'p'},
+     { "dumpto", 1, 0, 'd'},
++#ifdef MULTIBOOT
++    { "multi",  0, 0, 'm'},
++#endif
+     { "help",   0, 0, 'h'}
+ };
+ 
+@@ -81,6 +93,9 @@
+     printf ("zipl [options] [configuration]\n\n");
+     printf ("Options:\n");
+     printf ("-h or --help\t prints this information\n");
++#ifdef MULTIBOOT
++    printf ("-m or --multi\t instructs zipl to build a multiboot configuration\n");
++#endif
+ #ifdef HAVE_PARSECFG
+     printf ("-c <CONFIG-FILE> or --config=<CONFIG-FILE>\n\t<CONFIG-FILE> specifies the config file to be used.\n\tThis option overrides the environment variable ZIPLCONF.\n");
+     printf ("\nThe following options override settings in the config-file:\n");
+@@ -179,6 +194,9 @@
+     int c;
+     int index;
+     char* temp;
++#ifdef MULTIBOOT
++    options.multiboot = 0;
++#endif
+     while (1) {
+ 	c=getopt_long(argc,argv,zipl_getopt_string,zipl_getopt_long_options,&index);
+ 	if (c==-1) break; // exit loop if finished
+@@ -201,6 +219,12 @@
+ 	case 'd':
+ 	    zipl_argument_to_job (JOB_TYPE_DUMP,optarg);
+ 	    break;
++#ifdef MULTIBOOT
++	case 'm':
++            options.multiboot=1;
++            options.global_job=JOB_TYPE_IMAGE;
++	    break;
++#endif
+ 	case 'h':
+ 	    zipl_print_usage();
+ 	    exit(0);
+@@ -343,11 +367,18 @@
+     /* retrieve command line arguments */
+     if (rc=zipl_get_commandline (argc,argv))
+ 	return rc;
++#ifdef MULTIBOOT
++    if( options.multiboot == 0 )
++    {
++#endif
+ #ifdef HAVE_PARSECFG
+     if (rc=zipl_get_conffile())
+ 	return rc;
+ #endif
+     zipl_check_input();
++#ifdef MULTIBOOT
++    }
++#endif
+     return 0;
+ }
+ 
+@@ -890,6 +921,787 @@
+     return 0;
+ }
+ 
++#ifdef MULTIBOOT
++
++/*
++ * ASCII (IBM PC 437)  -> EBCDIC 037
++ *
++ * (Copied from kernel source tree)
++ */
++static unsigned char zipl_ascebc[256] =
++{
++ /*00 NUL   SOH   STX   ETX   EOT   ENQ   ACK   BEL */
++     0x00, 0x01, 0x02, 0x03, 0x37, 0x2D, 0x2E, 0x2F,
++ /*08  BS    HT    LF    VT    FF    CR    SO    SI */
++ /*              ->NL                               */
++     0x16, 0x05, 0x15, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
++ /*10 DLE   DC1   DC2   DC3   DC4   NAK   SYN   ETB */
++     0x10, 0x11, 0x12, 0x13, 0x3C, 0x3D, 0x32, 0x26,
++ /*18 CAN    EM   SUB   ESC    FS    GS    RS    US */
++ /*                               ->IGS ->IRS ->IUS */
++     0x18, 0x19, 0x3F, 0x27, 0x22, 0x1D, 0x1E, 0x1F,
++ /*20  SP     !     "     #     $     %     &     ' */
++     0x40, 0x5A, 0x7F, 0x7B, 0x5B, 0x6C, 0x50, 0x7D,
++ /*28   (     )     *     +     ,     -    .      / */
++     0x4D, 0x5D, 0x5C, 0x4E, 0x6B, 0x60, 0x4B, 0x61,
++ /*30   0     1     2     3     4     5     6     7 */
++     0xF0, 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7,
++ /*38   8     9     :     ;     <     =     >     ? */
++     0xF8, 0xF9, 0x7A, 0x5E, 0x4C, 0x7E, 0x6E, 0x6F,
++ /*40   @     A     B     C     D     E     F     G */
++     0x7C, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7,
++ /*48   H     I     J     K     L     M     N     O */
++     0xC8, 0xC9, 0xD1, 0xD2, 0xD3, 0xD4, 0xD5, 0xD6,
++ /*50   P     Q     R     S     T     U     V     W */
++     0xD7, 0xD8, 0xD9, 0xE2, 0xE3, 0xE4, 0xE5, 0xE6,
++ /*58   X     Y     Z     [     \     ]     ^     _ */
++     0xE7, 0xE8, 0xE9, 0xBA, 0xE0, 0xBB, 0xB0, 0x6D,
++ /*60   `     a     b     c     d     e     f     g */
++     0x79, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87,
++ /*68   h     i     j     k     l     m     n     o */
++     0x88, 0x89, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96,
++ /*70   p     q     r     s     t     u     v     w */
++     0x97, 0x98, 0x99, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6,
++ /*78   x     y     z     {     |     }     ~    DL */
++     0xA7, 0xA8, 0xA9, 0xC0, 0x4F, 0xD0, 0xA1, 0x07,
++ /*80*/
++     0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,
++ /*88*/
++     0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,
++ /*90*/
++     0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,
++ /*98*/
++     0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,
++ /*A0*/
++     0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,
++ /*A8*/
++     0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,
++ /*B0*/
++     0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,
++ /*B8*/
++     0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,
++ /*C0*/
++     0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,
++ /*C8*/
++     0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,
++ /*D0*/
++     0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,
++ /*D8*/
++     0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,
++ /*E0        sz						*/
++     0x3F, 0x59, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,
++ /*E8*/
++     0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,
++ /*F0*/
++     0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F, 0x3F,
++ /*F8*/
++     0x90, 0x3F, 0x3F, 0x3F, 0x3F, 0xEA, 0x3F, 0xFF
++};
++
++//
++// Parsecfg data
++//
++static char **image_str = NULL;
++static char **ramdisk_str = NULL;
++static char **parmfile_str = NULL;
++static char **target_str = NULL;
++static char **dumpto_str = NULL;
++static char **parameters_str = NULL;
++static char **default_str = NULL;
++static char **label_str = NULL;
++
++static cfgStruct zipl_cfg[] =
++{
++    {   "target",       CFG_STRING, &target_str     },
++    {   "image",        CFG_STRING, &image_str      },
++    {   "ramdisk",      CFG_STRING, &ramdisk_str    },
++    {   "parmfile",     CFG_STRING, &parmfile_str   },
++    {   "dumpto",       CFG_STRING, &dumpto_str     },
++    {   "parameters",   CFG_STRING, &parameters_str },
++    {   "default",      CFG_STRING, &default_str    },
++    {   "label",        CFG_STRING, &label_str      },
++    {   NULL,           CFG_END,    NULL            }
++};
++
++// Function: zipl_make_eot - stores an end of table marker in the bootmap
++// Parameters:
++//         __ipl_stage1_bootmap_t* param            - pointer to the parameter entry in the parameter list (will be filled)
++// Return value:
++//         returns 0
++int
++zipl_make_eot( __ipl_stage1_bootmap_t* param )
++{
++    memset( &param->bootlist, '\0', sizeof( param->bootlist ) );
++    param->ipl_type = __IPL_STAGE1_BOOT_TYPE_EOT;
++
++    return 0;
++}
++
++// Function: zipl_make_label - converts and installs a label entry
++// Parameters:
++//         char *label                              - input label
++//         __ipl_stage1_bootmap_t* param            - pointer to the parameter entry in the parameter list (will be filled)
++//         zipl_label_info_t **lilist               - list of previously used labels
++// Return value:
++//         returns 0 for success, !0 for failure
++int
++zipl_make_label( char *label,
++                 __ipl_stage1_bootmap_t* param,
++                 zipl_label_info_t **lilist  )
++{
++    zipl_label_info_t *li;
++    int i;
++    int o;
++
++    // initialize label bootlist
++    for( i = 0, o = 0; o < sizeof( param->bootlist.chars ); o++ )
++    {
++        if( label[ i ] != 0 )
++        {
++            param->bootlist.chars[ o ]  = zipl_ascebc[ toupper( label[ i++ ] ) ];
++        }
++        else
++        {
++            param->bootlist.chars[ o ] = zipl_ascebc[ ' ' ];
++        }
++    }
++    param->ipl_type = __IPL_STAGE1_BOOT_TYPE_LABEL;
++    param->load_address = 0;
++
++    // search for a duplicate label
++    for( li = *lilist; li != NULL; li = li->next )
++    {
++        if( memcmp( li->name, param->bootlist.chars, sizeof( li->name ) ) == 0 )
++        {
++            printf( "Duplicate label encountered: %s\n", label );
++            return -1;
++        }
++    }
++
++    // remember this new label
++    li = zipl_malloc( sizeof( zipl_label_info_t ) );
++    li->next = *lilist;
++    memcpy( &li->name,
++            &param->bootlist.chars,
++            sizeof( li->name ) );
++    *lilist = li;
++
++    return 0;
++}
++
++// Function: zipl_filename - creates a filename using printf style formatting
++// Parameters:
++//         char *fmt                                - format string
++//         ...                                      - necessary arguments
++// Return value:
++//         returns newly allocated filename
++char *
++zipl_filename( char *fmt, ... )
++{
++    char *name;
++    va_list ap;
++    int len;
++
++    // measure it
++    va_start( ap, fmt );
++    len = vsnprintf( NULL, 0, fmt, ap ) + 1;
++    va_end( ap );
++
++    // allocate it
++    name = zipl_malloc( len );
++
++    // generate it
++    va_start( ap, fmt );
++    vsnprintf( name, len, fmt, ap );
++    va_end( ap );
++
++    return name;
++}
++    
++// Function: zipl_add_to_multi_bootmap - add a file reference to the bootmap
++// Parameters:
++//         int fd                                   - open file descriptor of the bootmap file
++//         ssize_t* currentblk                      - number of the actual block in the bootmap  (will be incremented!)
++//         zipl_partn_info_t* dir_pinfo             - information about the partition containing the bootmap file
++//         char* target                             - job spec: filename, address
++//         int targettype                           - type of the target (one of the types defined in ipl_stage1.h)
++//         __ipl_stage1_bootmap_t* param            - pointer to the parameter entry in the parameter list (will be filled)
++// Return value:
++//         returns 0 on success and !=0 otherwise
++int
++zipl_add_to_multi_bootmap( int fd,
++                           ssize_t *currentblk,
++                           zipl_partn_info_t *dir_pinfo,
++                           char *target,
++                           int targettype,
++                           __ipl_stage1_bootmap_t* param,
++                           zipl_file_info_t **filist )
++{
++    zipl_file_info_t *fi;
++    char *targetname;
++    char *bptr;
++    char *eptr;
++    int targetaddress;
++    int ret;
++    int l;
++    struct stat stats;
++
++    // strip leading blanks from target name
++    for( bptr = target; *bptr != '\0'; bptr++ )
++    {
++        if( !isspace( *bptr ) )
++        {
++            break;
++        }
++    }
++
++    // get default address
++    switch( targettype )
++    {
++        case __IPL_STAGE1_BOOT_TYPE_KERNEL:
++            targetaddress = DEFAULT_ADDRESS_IMAGE;
++        break;
++
++        case __IPL_STAGE1_BOOT_TYPE_PARMLINE:
++           targetaddress = DEFAULT_ADDRESS_PARMFILE;
++        break;
++
++        case __IPL_STAGE1_BOOT_TYPE_INITRD:
++            targetaddress = DEFAULT_ADDRESS_RAMDISK;
++        break;
++
++        default:
++            printf( "zipl_add_to_multi_bootmap(): invalid job type %d\n",
++                    targettype );
++            return -1;
++        break;
++    }
++
++    // look for address override
++    for( eptr = bptr; *eptr != '\0'; eptr++ )
++    {
++        if( *eptr == ',' )
++        {
++            char *temp;
++
++            // convert and validate
++            errno = 0;
++            targetaddress = strtol( ++eptr, &temp, 0 );
++            if( ( temp == eptr ) || ( errno != 0 ) )
++            {
++                printf( "invalid target address: %s\n", eptr );
++                return -1;
++            }
++
++            break;
++        }
++    }
++
++    // strip trailing blanks from target name
++    while( --eptr >= bptr )
++    {
++        if( !isspace( *eptr ) )
++        {
++            break;
++        }
++    }
++
++    // ensure we have a non-null target name
++    if( eptr < bptr )
++    {
++        printf( "Error: empty filename passed to zipl_parse_job_name.\n" );
++	return -1;
++    }
++
++    // create file name
++    l = eptr - bptr + 1;
++    targetname = zipl_filename( "%*.*s", l, l, bptr );
++
++    if( be_verbose )
++    {
++        printf( "%-25.25s : %s located at 0x%08X\n",
++                "adding file to bootmap",
++                targetname,
++                targetaddress );
++    }
++
++    // get stats for the target
++    if( stat( targetname, &stats ) == -1 )
++    {
++	printf( "Error: Cannot get stats for target %s.\n", targetname );
++        free( targetname );
++	return -1;
++    }
++
++    // look for existing target
++    for( fi = *filist; fi != NULL; fi = fi->next )
++    {
++        if( ( fi->device == stats.st_dev ) && ( fi->inode == stats.st_ino ) )
++        {
++            break;
++        }
++    }
++
++    // find one?
++    if( fi != NULL )
++    {
++        // yes, use previous information
++        memcpy( &param->bootlist,
++                &fi->bootlist,
++                sizeof( __ipl_blocklist_container_u ) );
++        param->ipl_type = targettype;
++        param->load_address = targetaddress;
++    }
++    else
++    {
++        // no, add new target to bootmap
++        ret = zipl_add_to_bootmap( fd,
++                                   currentblk,
++                                   dir_pinfo,
++                                   targetname,
++                                   targetaddress,
++                                   targettype,
++                                   param );
++        if( ret )
++        {
++            printf( "Error: Could not add file to bootmap: %s.\n", targetname );
++            free( targetname );
++            return -1;
++        }
++
++        // remember it
++        fi = zipl_malloc( sizeof( zipl_file_info_t ) );
++        fi->next = *filist;
++        fi->device = stats.st_dev;
++        fi->inode = stats.st_ino;
++        memcpy( &fi->bootlist,
++                &param->bootlist,
++                sizeof( __ipl_blocklist_container_u ) );
++        *filist = fi;
++    }
++
++    // done with it
++    free( targetname );
++
++    return 0;
++}
++
++#define INC_BM_CNT \
++    bmcnt++; \
++    if( bmcnt == bmmax ) \
++    { \
++        printf( "Bootmap trailer full...reduce number of config sections\n" ); \
++        break; \
++    }
++
++// Function: zipl_do_multi_bootmap - create a multi configuration bootmap
++// Parameters:   none
++// Return value:  
++//         returns 0
++int
++zipl_do_multi_bootmap(void)
++{
++    zipl_file_info_t *filist = NULL, *fi;
++    zipl_parm_info_t *pilist = NULL, *pi;
++    zipl_label_info_t *lilist = NULL, *li;
++    zipl_partn_info_t *pinfo = NULL;
++    __ipl_stage1_bootmap_t *trailer = NULL;
++    char *bootmapname = NULL;
++    char *secname;
++    char *target;
++    char *label;
++    ssize_t currentblk = 0;
++    int bmcnt = 0;
++    int numsecs = 0;
++    int dfsec = -1;
++    int rc = -1;
++    int fd = -1;
++    int bmmax;
++    int load_address;
++    int dbsec;
++    int i;
++    int ret;
++    struct stat stats;
++
++    do
++    {
++        // set config file name
++        if( options.zipl_conf_name == NULL )
++        {
++            options.zipl_conf_name = DEFAULT_ZIPL_CONF;
++        }
++    
++        // parse the entire config file
++        numsecs = cfgParse( options.zipl_conf_name, zipl_cfg, CFG_INI );
++        if( numsecs == -1 )
++        {
++            printf( "An error was detected parsing config file\n" );
++            break;
++        }
++    
++        // get section number of defaultboot section
++        dbsec = cfgSectionNameToNumber( "defaultboot" );
++        if( dbsec == -1 )
++        {
++            printf( "The [defaultboot] section is missing in the config file\n" );
++            break;
++        }
++
++        // determine target directory
++        if( options.target_dir == NULL )
++        {
++            if( target_str[ dbsec ] != NULL )
++            {
++                options.target_dir = strdup( target_str[ dbsec ] );
++            }
++
++            if( options.target_dir == NULL )
++            {
++                printf( "No target directory specified\n" );
++                break;
++            }
++        }
++
++        // set default section name
++        if( options.section_name == NULL )
++        {
++            if( default_str[ dbsec ] != NULL )
++            {
++                options.section_name = strdup( default_str[ dbsec ] );
++            }
++        }
++
++        // verify default section name
++        if( options.section_name == NULL )
++        {
++            printf( "\nWarning:\n\n" );
++            printf( "    No default section specified.\n" );
++            printf( "    LOADPARM must be specified at IPL\n\n" );
++        }
++        else
++        {
++            dfsec = cfgSectionNameToNumber( options.section_name );
++            if( dfsec == -1 )
++            {
++                printf( "Default section %s not found\n",
++                        options.section_name );
++                break;
++            }
++        }
++
++        // verify target directory
++        if( stat( options.target_dir, &stats ) == -1 )
++        {
++            printf ("Error: Cannot access target directory %s.\n",options.target_dir);
++            break;
++        }
++        options.target_dev = stats.st_dev;
++
++        // generate bootmap name and create it
++        bootmapname = zipl_filename( "%s/bootmap", options.target_dir );
++        fd = open( bootmapname, O_RDWR | O_TRUNC | O_CREAT );
++        if( fd == -1 )
++        {
++            printf( "Error: Could not create bootmap %s.\n", bootmapname );
++            break;
++        }
++    
++        // get partition info
++        pinfo = pinfo_from_filename( bootmapname );
++        if( pinfo == NULL )
++        {
++            printf( "Error: Cannot get partition info for bootmap %s.\n", bootmapname );
++            break;
++        }
++    
++        // allocate a trailer block
++        trailer = zipl_malloc( pinfo->ssize );
++        memset( trailer, 0, pinfo->ssize );
++
++        // calculate max number of entries
++        bmmax = pinfo->ssize / sizeof( __ipl_stage1_bootmap_t );
++
++        if( be_verbose )
++        {
++            printf( "%-25.25s : %s\n", "Building bootmap", bootmapname );
++        }
++    
++        // write magic block
++        if( zipl_write_magic( fd, &currentblk, pinfo ) )
++        {
++            printf( "Error: Could not write to bootmap %s.\n", bootmapname );
++            break;
++        }
++    
++        // process each config file section
++        for( i = 0; i < numsecs; i++ )
++        {
++            // bypass defaultboot section
++            if( i == dbsec )
++            {
++                continue;
++            }
++
++            secname = cfgSectionNumberToName( i );
++
++            // ignore dump sections
++            if( dumpto_str[ i ] != NULL )
++            {
++                // can't have both image and dumpto
++                if( image_str[ i ] != NULL )
++                {
++                    printf( "image and dumpto specified in same section: %s\n",
++                            secname );
++                    break;
++                }
++    
++                if( be_verbose) 
++                {
++                    printf( "%-25.25s : %s\n", "Ignoring dumpto section", secname );
++                }
++    
++                continue;
++            }
++    
++            if( be_verbose )
++            {
++                printf( "%-25.25s : %s\n", "Processing section", secname );
++            }
++
++            // set real label
++            label = label_str[ i ];
++            if( label == NULL )
++            {
++                label = secname;
++            }
++
++            // store label in bootmap
++            ret = zipl_make_label( label, &trailer[ bmcnt ], &lilist );
++            if( ret )
++            {
++                break;
++            }
++            INC_BM_CNT;
++    
++            // store default (or blank) label
++            if( ( dfsec != -1 ) && ( i == dfsec ) )
++            {
++                ret = zipl_make_label( "", &trailer[ bmcnt ], &lilist );
++                if( ret )
++                {
++                    break;
++                }
++                INC_BM_CNT;
++            }
++
++            // use image from current section
++            target = image_str[ i ];
++            if( target == NULL )
++            {
++                // use image from defaultboot section
++                target = image_str[ dbsec ];
++            }
++
++            // must have an image
++            if( target == NULL )
++            {
++                printf( "image filespec required\n" );
++                break;
++            }
++    
++            // add it to bootmap
++            ret = zipl_add_to_multi_bootmap( fd,
++                                             &currentblk,
++                                             pinfo,
++                                             target,
++                                             __IPL_STAGE1_BOOT_TYPE_KERNEL,
++                                             &trailer[ bmcnt ],
++                                             &filist );
++            if( ret )
++            {
++                break;
++            }
++
++            // remember load address
++            load_address = trailer[ bmcnt ].load_address;
++            INC_BM_CNT;
++
++            // set ramdisk image
++            target = ramdisk_str[ i ];
++            if( target == NULL )
++            {
++                // use image from defaultboot section
++                target = ramdisk_str[ dbsec ];
++            }
++    
++            // store ramdisk image, if specified
++            if( target != NULL )
++            {
++                ret = zipl_add_to_multi_bootmap( fd,
++                                                 &currentblk,
++                                                 pinfo,
++                                                 target,
++                                                 __IPL_STAGE1_BOOT_TYPE_INITRD,
++                                                 &trailer[ bmcnt ],
++                                                 &filist );
++                if( ret )
++                {
++                    break;
++                }
++                INC_BM_CNT;
++            }
++    
++            // generate parmfile from parameters 
++            target = parmfile_str[ i ];
++            if( parameters_str[ i ] != NULL )
++            {
++                if( target != NULL )
++                {
++                    printf( "parmfile and parameters specified in same section\n" );
++                    break;
++                }
++    
++                // look for existing one
++                for( pi = pilist; pi != NULL; pi = pi->next )
++                {
++                    if( strcmp( pi->parms, parameters_str[ i ] ) == 0 )
++                    {
++                        target = pi->file;
++                        break;
++                    }
++                }
++    
++                // create a new one
++                if( pi == NULL )
++                {
++                    // generate file name
++                    target = zipl_filename( "%s/parmfile.%d",
++                                            options.target_dir,
++                                            i );
++    
++                    // remember it
++                    pi = zipl_malloc( sizeof( zipl_parm_info_t ) );
++                    pi->next = pilist;
++                    pi->parms = parameters_str[ i ];
++                    pi->file = target;
++                    pilist = pi;
++    
++                    // create it
++                    options.parameters = pi->parms;
++                    if( zipl_create_parmfile( target ) )
++                    {
++                        printf( "Error: Could not create parmfile %s\n", target );
++                        break;
++                    }
++                }
++            }
++    
++            // add parmfile to bootmap, if specified
++            if( target != NULL )
++            {
++                ret = zipl_add_to_multi_bootmap( fd,
++                                                 &currentblk,
++                                                 pinfo,
++                                                 target,
++                                                 __IPL_STAGE1_BOOT_TYPE_PARMLINE,
++                                                 &trailer[ bmcnt ],
++                                                 &filist );
++                if( ret )
++                {
++                    break;
++                }
++                INC_BM_CNT;
++            }
++    
++            // store jump entry
++            trailer[ bmcnt ].ipl_type = __IPL_STAGE1_BOOT_TYPE_EXECUTE;
++            trailer[ bmcnt ].load_address = load_address;
++            INC_BM_CNT;
++        }
++
++        // error break?
++        if( i != numsecs )
++        {
++            break;
++        }
++
++        // store end of table marker
++        zipl_make_eot( &trailer[ bmcnt++ ] );
++
++        if( be_verbose )
++        {
++            printf( "%-25.25s : %d out of %d\n",
++                    "Trailer entries used",
++                    bmcnt,
++                    bmmax );
++        }
++
++        // write trailer and remember its address
++        if( zipl_write_bootmap_block( fd,
++                                      trailer,
++                                      &currentblk,
++                                      pinfo,
++                                      &options.loaderparams ) )
++        {
++            printf( "Error: Failed to write bootmap trailer block.\n" );
++            break;
++        }    
++    
++        rc = 0;
++
++    } while( 0 );
++
++    // free file info 
++    for( fi = filist; fi != NULL; fi = filist )
++    {
++        filist = fi->next;
++        free( fi );
++    }
++
++    // free parm info
++    for( pi = pilist; pi != NULL; pi = pilist )
++    {
++        pilist = pi->next;
++        free( pi->file );
++        free( pi );
++    }
++
++    // free label info
++    for( li = lilist; li != NULL; li = lilist )
++    {
++        lilist = li->next;
++        free( li );
++    }
++
++    // cleanup parser
++    if( numsecs != -1 )
++    {
++        cfgFree( zipl_cfg, CFG_INI, numsecs );
++    }
++
++    // free partitino info
++    if( pinfo != NULL )
++    {
++        free( pinfo );
++    }
++
++    // free trailer info
++    if( trailer != NULL )
++    {
++        free( trailer );
++    }
++
++    // close bootmap file
++    if( fd != -1 )
++    {
++        close( fd );
++    }
++
++    return rc;
++}
++
++#endif
++
+ // Section: Install bootloader
+ 
+ // Function: zipl_install_iplfba - installs a bootloader for initial program load onto a FBA-Type disk
+@@ -1999,6 +2811,13 @@
+ 	    return (rc);
+ 	break;
+     case JOB_TYPE_IMAGE:
++#ifdef MULTIBOOT
++        if (options.multiboot==1) {
++            if (rc=zipl_do_multi_bootmap())
++                return rc;
++        }
++        else
++#endif
+ 	if (rc=zipl_do_bootmap())
+ 	    return rc;
+ 	if (rc=zipl_install_bootloader())

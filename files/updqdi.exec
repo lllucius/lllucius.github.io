@@ -1,0 +1,14 @@
+/* Apply update to QDI REXX A */
+ 
+'PIPE (end @ name PIPUMSP)',
+    '@   < qdi rexx a',                /* Read master                 */
+    '|   spec 1.80 1.80 pad 0 number 81.4 right ?0000? 85',/* pad,num */
+    '|u: update 81.8',                 /* Perform update              */
+    '|   spec 1.80',                   /* Strip sequence numbers      */
+    '|   strip trailing',              /* Strip trailing blanks       */
+    '|   > qdi rexx a',                /* Write new master            */
+    '@   < qdi update a',              /* Read transaction file       */
+    '|u:',                             /* Apply transaction file      */
+    '|   hole'                         /* Discard log                 */
+ 
+exit

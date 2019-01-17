@@ -1,0 +1,317 @@
+diff -ruN linux-2.4.19.SuSE.orig/Documentation/Configure.help linux-2.4.19.SuSE/Documentation/Configure.help
+--- linux-2.4.19.SuSE.orig/Documentation/Configure.help	2003-06-05 16:45:38.000000000 -0500
++++ linux-2.4.19.SuSE/Documentation/Configure.help	2003-07-18 20:31:20.000000000 -0500
+@@ -23895,6 +23895,11 @@
+ 
+ Support for DIAG access to CMS reserved Disks
+ CONFIG_DASD_DIAG
++  !!!IMPORTANT!!!
++  Do NOT use this support when running in 64-bit mode and have more
++  than 2GB of memory!
++  !!!IMPORTANT!!!
++
+   Select this option if you want to use CMS reserved Disks under VM
+   with the Diagnose250 command.  If you are not running under VM or
+   unsure what it is, say "N".
+@@ -23903,6 +23908,17 @@
+ CONFIG_DASD_AUTO_DIAG
+   This option enables demand loading of the DIAG module. 
+ 
++Support for all (VM supported) DIAG access block sizes
++CONFIG_DASD_DIAG_ALLBLK
++
++  Select this option if you want to use CMS reserved Disks under VM
++  with any of the block sizes supported by the Diagnose250 command.
++  If you are not running under VM or unsure what it is, say "N".
++  
++  If this option is selected, the devices volser will not display
++  properly at intialization time or when using the various display 
++  utilities like dasdview.
++
+ Merge some code into the kernel to make the image IPLable
+ CONFIG_IPLABLE
+   If you want to use the produced kernel to IPL directly from a
+diff -ruN linux-2.4.19.SuSE.orig/drivers/s390/Config.in linux-2.4.19.SuSE/drivers/s390/Config.in
+--- linux-2.4.19.SuSE.orig/drivers/s390/Config.in	2003-06-05 16:45:27.000000000 -0500
++++ linux-2.4.19.SuSE/drivers/s390/Config.in	2003-07-18 20:25:41.000000000 -0500
+@@ -15,12 +15,13 @@
+     bool     '   Automatic activation of FBA  module' CONFIG_DASD_AUTO_FBA
+   fi;
+ #  dep_tristate '   Support for CKD  Disks' CONFIG_DASD_CKD $CONFIG_DASD
+-  if [ "$CONFIG_ARCH_S390X" != "y" ]; then
+-    dep_tristate '   Support for DIAG access to CMS reserved Disks' CONFIG_DASD_DIAG $CONFIG_DASD
+-    if [ "$CONFIG_DASD_DIAG" = "m" ]; then
+-      bool     '   Automatic activation of DIAG module' CONFIG_DASD_AUTO_DIAG
+-    fi;
+-  fi; 
++  dep_tristate '   Support for DIAG access to CMS reserved Disks (see help!!!)' CONFIG_DASD_DIAG $CONFIG_DASD
++  if [ "$CONFIG_DASD_DIAG" = "m" ]; then
++    bool     '     Automatic activation of DIAG module' CONFIG_DASD_AUTO_DIAG
++  fi;
++  if [ "$CONFIG_DASD_DIAG" != "n" ]; then
++    bool     '     Allow all valid DIAG 250 block sizes' CONFIG_DASD_DIAG_ALLBLK
++  fi;
+ fi
+ 
+ endmenu
+diff -ruN linux-2.4.19.SuSE.orig/drivers/s390/block/dasd.c linux-2.4.19.SuSE/drivers/s390/block/dasd.c
+--- linux-2.4.19.SuSE.orig/drivers/s390/block/dasd.c	2003-06-05 16:45:37.000000000 -0500
++++ linux-2.4.19.SuSE/drivers/s390/block/dasd.c	2003-07-15 03:45:09.000000000 -0500
+@@ -1044,16 +1044,14 @@
+  * function dasd_discipline_enq
+  * chains the discpline given as argument to the tail of disiplines.
+  * Exception: DIAG is always queued to the head, to ensure that CMS RESERVED
+- * minidisks are invariably accessed using DIAG. But not on __s390x__ for now.
++ * minidisks are invariably accessed using DIAG.
+  */
+ static inline void
+ dasd_discipline_enq (dasd_discipline_t *discipline)
+ {
+-#ifndef __s390x__
+         if (strncmp (discipline->name, "DIAG", 4) == 0)
+                 list_add (&discipline->list, &dasd_disc_head);
+         else
+-#endif
+                 list_add_tail (&discipline->list, &dasd_disc_head);
+ }
+ 
+diff -ruN linux-2.4.19.SuSE.orig/drivers/s390/block/dasd_diag.c linux-2.4.19.SuSE/drivers/s390/block/dasd_diag.c
+--- linux-2.4.19.SuSE.orig/drivers/s390/block/dasd_diag.c	2003-06-05 16:45:29.000000000 -0500
++++ linux-2.4.19.SuSE/drivers/s390/block/dasd_diag.c	2003-07-18 18:06:05.000000000 -0500
+@@ -50,7 +50,7 @@
+ 	dasd_diag_characteristics_t rdc_data;
+ 	diag_rw_io_t iob;
+ 	diag_init_io_t iib;
+-	unsigned long *label;
++	unsigned int *label;
+ } dasd_diag_private_t;
+ 
+ static __inline__ int
+@@ -62,7 +62,13 @@
+         addr = __pa(devchar);
+ 	__asm__ __volatile__ ("    lhi   %0,3\n"
+                               "    lr    1,%1\n"
++#ifdef CONFIG_ARCH_S390X
++                              "    sam31\n"
+                               "    diag  1,0,0x210\n"
++                              "    sam64\n"
++#else
++                              "    diag  1,0,0x210\n"
++#endif
+ 			      "0:  ipm   %0\n"
+ 			      "    srl   %0,28\n"
+ 			      "1:\n"
+@@ -90,7 +96,13 @@
+         addr = __pa(iob);
+ 	__asm__ __volatile__ ("    lhi   %0,11\n"
+                               "    lr    0,%2\n"
++#ifdef CONFIG_ARCH_S390X
++			      "    sam31\n"
++			      "    diag  0,%1,0x250\n"
++			      "    sam64\n"
++#else
+ 			      "    diag  0,%1,0x250\n"
++#endif
+ 			      "0:  ipm   %0\n"
+ 			      "    srl   %0,28\n"
+ 			      "    or    %0,1\n"
+@@ -158,9 +170,9 @@
+ 	iob->dev_nr = device->devinfo.devno;
+ 	iob->key = 0;
+ 	iob->flags = 2;
+-	iob->block_count = cqr->cplength >> 1;
++	iob->block_count = cqr->datasize / sizeof(diag_bio_t);
+ 	iob->interrupt_params = (u32)(addr_t) cqr;
+-	iob->bio_list = __pa (cqr->cpaddr);
++	iob->bio_list = __pa (cqr->data);
+ 
+ 	cqr->startclk = get_clock ();
+ 
+@@ -289,10 +301,10 @@
+ {
+ 	int rc = 0;
+ 	int bsize;
+-	dasd_diag_private_t *private;
++	dasd_diag_private_t *private = NULL;
+ 	dasd_diag_characteristics_t *rdc_data;
+ 	ccw_req_t *cqr;
+-	long *label;
++	unsigned int *label = NULL;
+ 	int sb;
+ 
+ 	if (device == NULL) {
+@@ -347,7 +359,7 @@
+ 	} else {
+                 BUG();
+ 	}
+-	private->label = (long *) get_free_page (GFP_KERNEL);
++	private->label = (unsigned int *) get_free_page (GFP_KERNEL);
+ 	label = private->label;
+ 	mdsk_term_io (device);	/* first terminate all outstanding operations */
+ 	/* figure out blocksize of device */
+@@ -360,19 +372,20 @@
+ 			continue;
+ 		}
+ 		cqr = dasd_alloc_request (dasd_diag_discipline.name,
+-                                         sizeof (diag_bio_t) / sizeof (ccw1_t),
+-                                         0, device);
++                                         1,
++                                         sizeof (diag_bio_t),
++                                         device);
+ 
+ 		if (cqr == NULL) {
+ 
+ 			MESSAGE (KERN_WARNING, "%s",
+                                  "No memory to allocate initialization request");
+                         
+-			free_page ((long) private->label);
++			free_page ((unsigned long) private->label);
+                         rc = -ENOMEM;
+                         goto fail;
+ 		}
+-		bio = (diag_bio_t *) (cqr->cpaddr);
++		bio = (diag_bio_t *) (cqr->data);
+ 		memset (bio, 0, sizeof (diag_bio_t));
+ 		bio->type = MDSK_READ_REQ;
+ 		bio->block_number = device->sizes.pt_block + 1;
+@@ -386,21 +399,33 @@
+ 		iob->bio_list = __pa (bio);
+ 		rc = dia250 (iob, RW_BIO);
+ 		dasd_free_request(cqr, device);
++		mdsk_term_io (device);
+ 		if (rc == 0) {
+-			if (label[3] != bsize ||
+-                            label[0] != 0xc3d4e2f1 ||	/* != CMS1 */
+-                            label[13] == 0 ){
+-                                rc = -EMEDIUMTYPE;
+-				goto fail;
+-			}
+ 			break;
+ 		}
+-		mdsk_term_io (device);
+ 	}
++
+         if (bsize > PAGE_SIZE) {
+                 rc = -EMEDIUMTYPE;
+ 		goto fail;
+         }
++
++        if (label[0] != 0xc3d4e2f1 ||	/* != CMS1 */
++#ifndef CONFIG_DASD_DIAG_ALLBLK
++            label[3] != bsize ||        /* block size match */
++#endif
++            label[13] == 0 )            /* ! reserved */
++        {
++                rc = -EMEDIUMTYPE;
++                goto fail;
++        }
++
++        bsize = label[3];
++	rc = mdsk_init_io (device, bsize, 0, 64);
++	if (rc > 4) {
++                rc = -EMEDIUMTYPE;
++		goto fail;
++	}
+ 	device->sizes.blocks = label[7];
+ 	device->sizes.bp_block = bsize;
+ 	device->sizes.s2b_shift = 0;	/* bits to shift 512 to get a block */
+@@ -414,13 +439,22 @@
+                      (device->sizes.bp_block >> 10),
+                      (device->sizes.blocks << device->sizes.s2b_shift) >> 1);
+ 
+-	free_page ((long) private->label);
++	free_page ((unsigned long) private->label);
+         rc = 0;
+ 	goto out;
+  fail:
+         if ( rc ) {
+-                kfree (device->private);
+-                device->private = NULL;
++                if (label != NULL)
++                {
++                        free_page ((unsigned long) label);
++                        private->label = NULL;
++                }
++
++                if (private != NULL)
++                {
++                        kfree (device->private);
++                        device->private = NULL;
++                }
+         }
+  out:
+ 	return rc;
+@@ -489,15 +523,17 @@
+                 bhct += bh->b_size >> (device->sizes.s2b_shift+9);
+ 	}
+ 	/* Build the request */
+-	rw_cp = dasd_alloc_request (dasd_diag_discipline.name, bhct << 1, 0, device);
++	rw_cp = dasd_alloc_request (dasd_diag_discipline.name,
++                                   1,
++                                   bhct * sizeof(diag_bio_t),
++                                   device);
+ 	if (!rw_cp) {
+ 		return  ERR_PTR(-ENOMEM);
+ 	}
+-	bio = (diag_bio_t *) (rw_cp->cpaddr);
+-
++	bio = (diag_bio_t *) (rw_cp->data);
++        memset (bio, 0, bhct * sizeof (diag_bio_t));
+ 	block = reloc_sector >> device->sizes.s2b_shift;
+ 	for (bh = req->bh; bh; bh = bh->b_reqnext) {
+-                memset (bio, 0, sizeof (diag_bio_t));
+                 for (size = 0; size < bh->b_size; size += byt_per_blk) {
+                         bio->type = rw_cmd;
+                         bio->block_number = block + 1;
+@@ -564,18 +600,32 @@
+ int
+ dasd_diag_init (void)
+ {
++        struct sysinfo i;
+ 	int rc = 0;
+ 
+ 	if (MACHINE_IS_VM) {
+ 
+-		MESSAGE (KERN_INFO,
+-                         "%s discipline initializing",
+-                         dasd_diag_discipline.name);
++                si_meminfo(&i);
+ 
+-		ASCEBC (dasd_diag_discipline.ebcname, 4);
+-		ctl_set_bit (0, 9);
+-		register_external_interrupt (0x2603, dasd_ext_handler);
+-		dasd_discipline_add (&dasd_diag_discipline);
++                if ((i.totalram << PAGE_SHIFT) > 2147483647)
++                {
++                        MESSAGE (KERN_INFO,
++                                "Machine has >= 2GB of memory: %s discipline not initializing",
++                                dasd_diag_discipline.name);
++
++                        rc = -EINVAL;
++                }
++                else
++                {
++                        MESSAGE (KERN_INFO,
++                                "%s discipline initializing",
++                                dasd_diag_discipline.name);
++
++                        ASCEBC (dasd_diag_discipline.ebcname, 4);
++                        ctl_set_bit (0, 9);
++                        register_external_interrupt (0x2603, dasd_ext_handler);
++                        dasd_discipline_add (&dasd_diag_discipline);
++                }
+ 	} else {
+ 
+ 		MESSAGE (KERN_INFO,
+diff -ruN linux-2.4.19.SuSE.orig/drivers/s390/ccwcache.c linux-2.4.19.SuSE/drivers/s390/ccwcache.c
+--- linux-2.4.19.SuSE.orig/drivers/s390/ccwcache.c	2002-08-02 19:39:44.000000000 -0500
++++ linux-2.4.19.SuSE/drivers/s390/ccwcache.c	2003-07-15 03:43:57.000000000 -0500
+@@ -146,7 +146,7 @@
+ 
+ 	/* determine cache index for the requested size */
+ 	for (cachind = 0; cachind < CCW_NUMBER_CACHES; cachind ++ )
+-	   if ( size_needed < (SMALLEST_SLAB << cachind) ) 
++	   if ( size_needed <= (SMALLEST_SLAB << cachind) ) 
+ 			break;
+ 
+ 	/* Try to fulfill the request from a cache */

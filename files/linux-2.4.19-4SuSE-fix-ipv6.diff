@@ -1,0 +1,12 @@
+diff -ruN linux-2.4.19.SuSE.orig/net/netsyms.c linux-2.4.19.SuSE/net/netsyms.c
+--- linux-2.4.19.SuSE.orig/net/netsyms.c	2003-06-05 16:45:33.000000000 -0500
++++ linux-2.4.19.SuSE/net/netsyms.c	2003-06-28 20:41:48.000000000 -0500
+@@ -306,6 +306,8 @@
+ 
+ 
+ #ifdef CONFIG_IPV6
++EXPORT_SYMBOL(addrconf_lock);
++EXPORT_SYMBOL(in6_dev_finish_destroy);
+ EXPORT_SYMBOL(__ipv6_addr_type);
+ EXPORT_SYMBOL(icmpv6_send);
+ EXPORT_SYMBOL(ndisc_mc_map);

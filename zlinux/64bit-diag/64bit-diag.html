@@ -1,0 +1,39 @@
+---
+layout: page
+title: 64-bit DASD DIAG
+permalink: /zlinux/64bit-diag/
+---
+                  <h2>{{page.title}}</h2>
+                  <p>This is a patch to the kernel that adds the ability to use the DASD DIAG discipline in a 64-bit environment.&nbsp; It seems that everyone recommends the use of the DIAG discipline for swap, but us folks running 64-bit were left out as z/VM doesn't (yet) support DIAG x'250' in a 64-bit world.</p>
+                  <p>This version &quot;fixes&quot; the problem of the label not being recognized.&nbsp; Since the label information contains the offset to the reserved portion of the CMS disk, the disk structures would be overlaid due to the way the partition was setup.&nbsp; In addition, I've attempted to reorganize and strip out unnecessary code.&nbsp; It also contains a couple more minor kernel fixes.</p>
+                  <p>To enable it (and the DIAG discipline itself), select the options in the &quot;S/390 block device drivers&quot; kernel configuration section.</p>
+                  <p>Though I have not tested it, the patch should also be usable in a 31-bit environment so the additional block size support can be utilized.</p>
+                  <p>DO NOT USE in a production environment without extensive testing.&nbsp; While it &quot;seems&quot; to work just fine, I may have missed something so make sure you read the <a href="/disclaim">this</a> page.</p>
+                  <p>Download:</p>
+                  <p><a href="/files/linux-2.4.19-4SuSE-64bit-dasd-diag-4.diff">64bit-diag-4</a></p>
+                  <p>Previous:</p>
+                  <p><a href="/files/linux-2.4.19-4SuSE-64bit-dasd-diag-3.diff">64bit-diag-3</a></p>
+                  <p>Change History:</p>
+<br>
+                  <table class="tbl">
+                    <tr>
+                      <td class="col1">Date</td>
+                      <td class="col2">Change</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2003-07-21</td>
+                      <td class="col2">Fixed CMS label recognition</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2003-07-18</td>
+                      <td class="col2">Adding ability to use all DIAG x'250' supported block sizes</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2003-07-14</td>
+                      <td class="col2">Fixed random oops when using with a regular file system (not just swap)</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2003-07-13</td>
+                      <td class="col2">Initial distribution</td>
+                    </tr>
+                  </table>

@@ -1,0 +1,6 @@
+---
+layout: post
+date:   2005-06-13
+categories:
+---
+Added the <a href="zvm/vma">VMA</a> utility to list and extract VMARC files on non-VM systems.

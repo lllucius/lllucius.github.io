@@ -1,0 +1,6 @@
+---
+layout: post
+date:   2003-07-21
+categories:
+---
+Updated <a href="zlinux/64bit-diag">DASD DIAG</a> discipline 64-bit support

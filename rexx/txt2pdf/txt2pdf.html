@@ -1,0 +1,144 @@
+---
+layout: page
+title: Text to PDF converter
+permalink: /rexx/txt2pdf/
+---
+                  <h2>{{page.title}}</h2>
+                  <p>The TXT2PDF utility is used to convert a text file into a Portable Document Format (<a href="http://www.adobe.com/products/acrobat/adobepdf.html">PDF</a>) file. It has many options to control the conversion, output appearance, and final presentation. Some of the features include:</p>
+                  <ul>
+                    <li>Annotations</li>
+                    <li>Outline generation</li>
+                    <li>Color control</li>
+                    <li>Several background options</li>
+                    <li>Viewer control</li>
+                    <li>Drawing primitives</li>
+                    <li>BMP and JPEG support</li>
+                    <li>TrueType embedding and subsetting</li>
+                  </ul>
+                  <p>At this time, the following features are only available on OS/390, z/OS, and z/VM platforms:</p>
+                  <ul>
+                    <li>Encryption</li>
+                    <li>Compression</li>
+                  </ul>
+                  <p>At this time, the following features are only available on OS/390 and z/OS platforms:</p>
+                  <ul>
+                    <li>ISPF Dialog</li>
+                  </ul>
+                  <p>The ISPF Dialog features of interest are:</p>
+                  <ul>
+                    <li>Prompted creation of the TXT2PDF options</li>
+                    <li>Foreground and Batch processing options</li>
+                    <li>Easy modeling for production batch JCL</li>
+                    <li>Support for FTP and E-Mail of the generated report</li>
+                  </ul>
+                  <p>The original design was simply to convert OS/390 reports to PDF prior to emailing, but TXT2PDF has been generalized and adapted to other platforms including Linux, VM, and Windows. All that is required is a REXX interpreter or compiler on the target platform.</p>
+                  <p>While I was the original author of the actual conversion code, it has become a joint effort between myself and <a href="http://www.lbdsoftware.com/">Lionel Dyck</a>.&nbsp; He has written MANY useful z/OS utilities and also <a href="http://www.lbdsoftware.com/tcpip.html">hosts</a> the OS/390 version of TXT2PDF. </p>
+                  <p>If you plan to use TXT2PDF on OS/390 or z/OS, you should head over to Lionel's <a href="http://www.lbdsoftware.com/">site</a> to grab the latest version.</p>
+                  <p>But, if you're looking to use it elsewhere, you may find this distribution a bit easier to since it only includes files suitable for non-OS/390 platforms.</p>
+                  <p>Lionel also hosts the <a href="http://www.lbdsoftware.com/TXT2PDF-User-Guide.pdf">documentation</a>.</p>
+
+                  <p>Here's a few examples of what can be achieved:</p>
+                  <table class="tbl">
+                    <tr>
+                      <td class="col33">Config File</td>
+                      <td class="col33">Input File</td>
+                      <td class="col33">Output PDF</td>
+                      <td class="col33">Support files</td>
+                    </tr>
+                    <tr>
+                      <td class="col33"><a href="/files/examples/acmeit.conf">acmeit.conf</a></td>
+                      <td class="col33"><a href="/files/examples/acmeit.txt">acmeit.txt</a></td>
+                      <td class="col33"><a href="/files/examples/acmeit.pdf">acmeit.pdf</a></td>
+                      <td class="col33">
+                        <a href="/files/examples/acmeit.jpg">acmeit.jpg</a>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="col33"><a href="/files/examples/bar.conf">bar.conf</a></td>
+                      <td class="col33"><a href="/files/examples/bar.txt">bar.txt</a></td>
+                      <td class="col33"><a href="/files/examples/bar.pdf">bar.pdf</a></td>
+                      <td class="col33">
+                        <a href="/files/examples/IDAutomationHC39M.ttf">IDAutomationHC39M.ttf</a>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="col33"><a href="/files/examples/check.conf">check.conf</a></td>
+                      <td class="col33"><a href="/files/examples/check.txt">check.txt</a></td>
+                      <td class="col33"><a href="/files/examples/check.pdf">check.pdf</a></td>
+                      <td class="col33">
+                        <a href="/files/examples/IDAutomationSMICR.ttf">IDAutomationSMICR.ttf</a>
+                        <a href="/files/examples/McCoyDyslexia.ttf">McCoyDyslexia.ttf</a>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="col33"><a href="/files/examples/ebcdic.conf">ebcdic.conf</a></td>
+                      <td class="col33"><a href="/files/examples/ebcdic.txt">ebcdic.txt</a></td>
+                      <td class="col33"><a href="/files/examples/ebcdic.pdf">ebcdic.pdf</a></td>
+                      <td class="col33">
+                        <a href="/files/examples/VeraMono.ttf">Cyberbit.ttf</a>
+                        <a href="/files/examples/ibm1047.ucm">ibm1047.ucm</a>
+                      </td>
+                    </tr>
+                  </table>
+                  <p><span style="color: rgb(255,0,0)">WARNING</span>: As of the 04.147 release, the behavior has changed for the CC parameter under z/OS.&nbsp; Originally, it defaulted to &quot;NO&quot; but this didn't allow the EXEC to determine the carriage control from the datasets record format automatically.&nbsp; This has now been changed so that if no CC parameter is specified, the EXEC will query the dataset for the proper value.&nbsp; It is important you verify that either the CC parameter is specified in existing jobs or that they will work okay with the new behavior.</p>
+                  <p>Download:</p>
+                  <p><a href="/files/txt2pdf-18.211.tar.gz">txt2pdf-18.211.tar.gz</a><br />
+                    <a href="/files/txt2pdf-18.211-changes.txt">txt2pdf-18.211-changes.txt</a></p>
+                  <p>Previous version:</p>
+                  <p><a href="/files/txt2pdf-09.107.tar.gz">txt2pdf-09.107.tar.gz</a><br />
+                    <a href="/files/txt2pdf-09.107-changes.txt">txt2pdf-09.107-changes.txt</a></p>
+                  <p>Or for you VMers:</p>
+                  <p><a href="/files/txt2pdf-09.107.vmarc">txt2pdf-09.107.vmarc</a><br />
+                    <a href="/files/txt2pdfs-09.107.vmarc">txt2pdfs-09.107.vmarc</a> (source...only needed if you want to rebuild the load modules)</p>
+                  <p>Change History:</p>
+                  <br>
+                  <table class="tbl">
+                    <tr>
+                      <td class="col1">Date</td>
+                      <td class="col2">Change</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2018-07-30</td>
+                      <td class="col2">Fixed a couple of TrueType font handling bugs.&nbsp; See changes file for full list.</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2009-04-17</td>
+                      <td class="col2">Addd new parameters/arguments (TrueType support) and more cleanup.&nbsp; See changes file for full list.</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2008-11-06</td>
+                      <td class="col2">Cleanup and critter fixes.&nbsp; See changes file for full list.</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2004-05-26</td>
+                      <td class="col2">Added new parameters/arguments and fixed a few critters.&nbsp; See changes file for full list.</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2003-10-31</td>
+                      <td class="col2">Added a few things and fixed one.&nbsp; See changes file for full list.</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2003-08-12</td>
+                      <td class="col2">Added TEXT DRAW type and fixed a bug from last update.&nbsp; See changes file for full list.</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2003-08-10</td>
+                      <td class="col2">Added DRAW / IMAGE keywords, CMS PIPELINE stage, and stdio use.&nbsp; See changes file for full list.</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2003-08-06</td>
+                      <td class="col2">Added a couple new command line parameters and a few fixes.&nbsp; See changes file for full list.</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2002-12-02</td>
+                      <td class="col2">Many updates and several fixes.&nbsp; See changes file in archive.</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2002-10-26</td>
+                      <td class="col2">Added ASCII support and some minor cleanup</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2002-10-08</td>
+                      <td class="col2">Initial posting</td>
+                    </tr>
+                  </table>

@@ -1,0 +1,6 @@
+---
+layout: post
+date:   2006-05-05
+categories:
+---
+New Mac version of <a href="zvm/vma">VMAgui</a> that opens viewer app on top of VMAgui.

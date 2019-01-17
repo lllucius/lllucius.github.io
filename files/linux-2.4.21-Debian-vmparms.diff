@@ -1,0 +1,278 @@
+diff -ruN kernel-source-2.4.21-2.4.21.orig/arch/s390/kernel/head.S kernel-source-2.4.21-2.4.21/arch/s390/kernel/head.S
+--- kernel-source-2.4.21-2.4.21.orig/arch/s390/kernel/head.S	2004-03-08 22:50:36.000000000 -0600
++++ kernel-source-2.4.21-2.4.21/arch/s390/kernel/head.S	2004-03-08 22:55:21.000000000 -0600
+@@ -57,6 +57,10 @@
+ 
+         .org   0x100
+ #
++# reserve room for IPL registers...remain compatible with ZIPL.
++#
++        .org   0x1c0
++#
+ # subroutine for loading from tape
+ # Paramters:	
+ #  R1 = device number
+@@ -179,6 +183,10 @@
+ 
+         .org   0xf0
+ #
++# reserve room for IPL registers...remain compatible with ZIPL.
++#
++        .org   0x1c0
++#
+ # subroutine for loading cards from the reader
+ #
+ .Lloader:	
+@@ -256,6 +264,7 @@
+ #endif  /* CONFIG_IPL_VM */
+ 
+ iplstart:
++        stm   %r0,%r15,IPL_REGS                # store all registers
+         lh    %r1,0xb8                         # test if subchannel number
+         bct   %r1,.Lnoload                     #  is valid
+ 	l     %r1,0xb8                         # load ipl subchannel number
+@@ -459,7 +468,16 @@
+ # or linload or SALIPL
+ #
+         .org  0x10000
+-startup:basr  %r13,0                     # get base
++startup:
++#ifdef CONFIG_SHARED_KERNEL
++#
++# Allows use of the IPL PARM parameter with NSSes and remains compatible
++# with none NSS usage.
++#
++        lm    %r0,%r15,IPL_REGS          # load ipl regs
++        stm   %r0,%r15,IPL_REGS          # (re)save regs
++#endif
++        basr  %r13,0                     # get base
+ .LPG1:  lctl  %c0,%c15,.Lctl-.LPG1(%r13) # load control registers
+ 	la    %r12,_pstart-.LPG1(%r13)   # pointer to parameter area
+ 					 # move IPL device to lowcore
+diff -ruN kernel-source-2.4.21-2.4.21.orig/arch/s390/kernel/setup.c kernel-source-2.4.21-2.4.21/arch/s390/kernel/setup.c
+--- kernel-source-2.4.21-2.4.21.orig/arch/s390/kernel/setup.c	2004-03-08 22:50:36.000000000 -0600
++++ kernel-source-2.4.21-2.4.21/arch/s390/kernel/setup.c	2004-03-08 15:00:57.000000000 -0600
+@@ -35,11 +35,13 @@
+ #include <linux/bootmem.h>
+ #include <linux/console.h>
+ #include <linux/seq_file.h>
++#include <linux/ctype.h>
+ #include <asm/uaccess.h>
+ #include <asm/system.h>
+ #include <asm/smp.h>
+ #include <asm/mmu_context.h>
+ #include <asm/cpcmd.h>
++#include <asm/ebcdic.h>
+ 
+ /*
+  * Machine setup..
+@@ -181,6 +183,13 @@
+ 
+ #include <asm/setup.h>
+ 
++/*
++ * Change this to whatever you want the VM PARM eyecatcher to be or set to
++ * the null ("") string to disable.  (It must be in uppercase EBCDIC.)
++ */
++#define PARMEYEC "\xd3\xc9\xd5\xc5\x40"
++#define PARMEYEL ((int)sizeof(PARMEYEC)-1)
++
+ static char command_line[COMMAND_LINE_SIZE] = { 0, };
+        char saved_command_line[COMMAND_LINE_SIZE];
+ 
+@@ -235,7 +244,7 @@
+         dx = 0;
+         for (sx = 0; src[sx] != 0; sx++) {
+                 if (src[sx] == '"') continue;
+-                dst[dx++] = src[sx];
++                dst[dx++] = toupper(src[sx]);
+                 if (dx >= n) break;
+         }
+ }
+@@ -462,6 +471,28 @@
+ 	data_resource.start = (unsigned long) &_etext;
+ 	data_resource.end = (unsigned long) &_edata - 1;
+ 
++        /* Append VM PARMs */
++        if (MACHINE_IS_VM && (memcmp(IPL_REGS, PARMEYEC, PARMEYEL) == 0)) {
++                int last = 0;
++
++		/* Find last nonblank character */
++                for (i = 0; i < COMMAND_LINE_SIZE; i++) {
++                        if (from[i] == '\0')
++                                break;
++                        if (!isspace(from[i]))
++                                last = i + 1;
++                }
++
++                if (last < COMMAND_LINE_SIZE) {
++                        from[last++] = ' ';
++                        i = min(COMMAND_LINE_SIZE-last, 64-PARMEYEL);
++                        memcpy(&from[last], &((char *)IPL_REGS)[PARMEYEL], i);
++                        EBC_TOLOWER(&from[last], i);
++                        EBCASC(&from[last], i);
++                        from[last+i] = '\0';
++		}
++        }
++
+         /* Save unparsed command line copy for /proc/cmdline */
+         memcpy(saved_command_line, COMMAND_LINE, COMMAND_LINE_SIZE);
+         saved_command_line[COMMAND_LINE_SIZE-1] = '\0';
+diff -ruN kernel-source-2.4.21-2.4.21.orig/arch/s390x/kernel/head.S kernel-source-2.4.21-2.4.21/arch/s390x/kernel/head.S
+--- kernel-source-2.4.21-2.4.21.orig/arch/s390x/kernel/head.S	2004-03-08 22:50:37.000000000 -0600
++++ kernel-source-2.4.21-2.4.21/arch/s390x/kernel/head.S	2004-03-08 20:29:03.000000000 -0600
+@@ -57,6 +57,10 @@
+ 
+         .org   0x100
+ #
++# reserve room for IPL registers...remain compatible with ZIPL.
++#
++        .org   0x1c0
++#
+ # subroutine for loading from tape
+ # Paramters:	
+ #  R1 = device number
+@@ -179,6 +183,10 @@
+ 
+         .org   0xf0
+ #
++# reserve room for IPL registers...remain compatible with ZIPL.
++#
++        .org   0x1c0
++#
+ # subroutine for loading cards from the reader
+ #
+ .Lloader:	
+@@ -256,6 +264,7 @@
+ #endif  /* CONFIG_IPL_VM */
+ 
+ iplstart:
++        stm   %r0,%r15,IPL_REGS                # store all registers
+         lh    %r1,0xb8                         # test if subchannel number
+         bct   %r1,.Lnoload                     #  is valid
+ 	l     %r1,0xb8                         # load ipl subchannel number
+@@ -456,7 +465,16 @@
+ # or linload or SALIPL
+ #
+         .org  0x10000
+-startup:basr  %r13,0                     # get base
++startup:
++#ifdef CONFIG_SHARED_KERNEL
++#
++# Allows use of the IPL PARM parameter with NSSes and remains compatible
++# with none NSS usage.
++#
++        lm    %r0,%r15,IPL_REGS          # load ipl regs
++        stm   %r0,%r15,IPL_REGS          # (re)save regs
++#endif
++        basr  %r13,0                     # get base
+ .LPG1:  sll   %r13,1                     # remove high order bit
+         srl   %r13,1
+         lhi   %r1,1                      # mode 1 = esame
+diff -ruN kernel-source-2.4.21-2.4.21.orig/arch/s390x/kernel/setup.c kernel-source-2.4.21-2.4.21/arch/s390x/kernel/setup.c
+--- kernel-source-2.4.21-2.4.21.orig/arch/s390x/kernel/setup.c	2004-03-08 22:50:36.000000000 -0600
++++ kernel-source-2.4.21-2.4.21/arch/s390x/kernel/setup.c	2004-03-08 15:00:57.000000000 -0600
+@@ -35,11 +35,13 @@
+ #include <linux/bootmem.h>
+ #include <linux/console.h>
+ #include <linux/seq_file.h>
++#include <linux/ctype.h>
+ #include <asm/uaccess.h>
+ #include <asm/system.h>
+ #include <asm/smp.h>
+ #include <asm/mmu_context.h>
+ #include <asm/cpcmd.h>
++#include <asm/ebcdic.h>
+ 
+ /*
+  * Machine setup..
+@@ -69,6 +71,13 @@
+ 
+ #include <asm/setup.h>
+ 
++/*
++ * Change this to whatever you want the VM PARM eyecatcher to be or set to
++ * the null ("") string to disable.  (It must be in uppercase EBCDIC.)
++ */
++#define PARMEYEC "\xd3\xc9\xd5\xc5\x40"
++#define PARMEYEL ((int)sizeof(PARMEYEC)-1)
++
+ static char command_line[COMMAND_LINE_SIZE] = { 0, };
+        char saved_command_line[COMMAND_LINE_SIZE];
+ 
+@@ -123,7 +132,7 @@
+         dx = 0;
+         for (sx = 0; src[sx] != 0; sx++) {
+                 if (src[sx] == '"') continue;
+-                dst[dx++] = src[sx];
++                dst[dx++] = toupper(src[sx]);
+                 if (dx >= n) break;
+         }
+ }
+@@ -335,6 +344,28 @@
+ 	data_resource.start = (unsigned long) &_etext;
+ 	data_resource.end = (unsigned long) &_edata - 1;
+ 
++        /* Append VM PARMs */
++        if (MACHINE_IS_VM && (memcmp(IPL_REGS, PARMEYEC, PARMEYEL) == 0)) {
++                int last = 0;
++
++		/* Find last nonblank character */
++                for (i = 0; i < COMMAND_LINE_SIZE; i++) {
++                        if (from[i] == '\0')
++                                break;
++                        if (!isspace(from[i]))
++                                last = i + 1;
++                }
++
++                if (last < COMMAND_LINE_SIZE) {
++                        from[last++] = ' ';
++                        i = min(COMMAND_LINE_SIZE-last, 64-PARMEYEL);
++                        memcpy(&from[last], &((char *)IPL_REGS)[PARMEYEL], i);
++                        EBC_TOLOWER(&from[last], i);
++                        EBCASC(&from[last], i);
++                        from[last+i] = '\0';
++		}
++        }
++
+         /* Save unparsed command line copy for /proc/cmdline */
+         memcpy(saved_command_line, COMMAND_LINE, COMMAND_LINE_SIZE);
+         saved_command_line[COMMAND_LINE_SIZE-1] = '\0';
+diff -ruN kernel-source-2.4.21-2.4.21.orig/include/asm-s390/setup.h kernel-source-2.4.21-2.4.21/include/asm-s390/setup.h
+--- kernel-source-2.4.21-2.4.21.orig/include/asm-s390/setup.h	2004-03-08 22:50:36.000000000 -0600
++++ kernel-source-2.4.21-2.4.21/include/asm-s390/setup.h	2004-03-08 22:55:43.000000000 -0600
+@@ -19,6 +19,7 @@
+ #define INITRD_START      (*(unsigned long *)  (0x1040C))
+ #define INITRD_SIZE       (*(unsigned long *)  (0x10414))
+ #define COMMAND_LINE      ((char *)            (0x10480))
++#define IPL_REGS          ((unsigned int *)    (0x180))
+ 
+ /*
+  * Machine features detected in head.S
+@@ -56,6 +57,7 @@
+ #define INITRD_START      0x1040C
+ #define INITRD_SIZE       0x10414
+ #define COMMAND_LINE      0x10480
++#define IPL_REGS          0x180
+ 
+ #endif
+ 
+diff -ruN kernel-source-2.4.21-2.4.21.orig/include/asm-s390x/setup.h kernel-source-2.4.21-2.4.21/include/asm-s390x/setup.h
+--- kernel-source-2.4.21-2.4.21.orig/include/asm-s390x/setup.h	2004-03-08 22:50:36.000000000 -0600
++++ kernel-source-2.4.21-2.4.21/include/asm-s390x/setup.h	2004-03-08 20:00:00.000000000 -0600
+@@ -19,6 +19,7 @@
+ #define INITRD_START      (*(unsigned long *)  (0x10408))
+ #define INITRD_SIZE       (*(unsigned long *)  (0x10410))
+ #define COMMAND_LINE      ((char *)            (0x10480))
++#define IPL_REGS          ((unsigned int *)    (0x180))
+ 
+ /*
+  * Machine features detected in head.S
+@@ -54,6 +55,7 @@
+ #define INITRD_START      0x10408
+ #define INITRD_SIZE       0x10410
+ #define COMMAND_LINE      0x10480
++#define IPL_REGS          0x180
+ 
+ #endif
+ 

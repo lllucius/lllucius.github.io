@@ -1,0 +1,6 @@
+---
+layout: post
+date:   2003-10-31
+categories:
+---
+Several features added to <a href="rexx/txt2pdf">TXT2PDF</a> including compression and encryption support in VM.&nbsp; Thanks Frank!!!

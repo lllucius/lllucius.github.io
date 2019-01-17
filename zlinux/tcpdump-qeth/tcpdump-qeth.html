@@ -1,0 +1,29 @@
+---
+layout: page
+title: tcpdump-qeth Wrapper
+permalink: /zlinux/tcpdump-qeth/
+---
+                  <h2>{{page.title}}</h2>
+                  <p>This Perl program provides a wrapper for the tcpdump utility to allow capturing packets from qeth or hipersocket network interfaces.&nbsp; It injects a link-level header that is missing from captured packets produced by those interfaces.&nbsp; It was written by <a href="http://linuxvm.org/community/hsmolins.html">Holger Smolinski</a> of IBM and released under the GPL.</p>
+                  <p>As distributed up to SLES 11 SP1, the program has a couple of minor issues and does not allow you to use any filter programs.&nbsp; With the exception of multiple &quot;d&quot; and &quot;v&quot; arguments, you may use all arguments as described by the tcpdump manpage.&nbsp; </p>
+                  <p>You may either download the patch or a pre-patched version of the program.</p>
+                  <p>Download patch:</p>
+                  <p><a href="/files/tcpdump-qeth.diff">tcpdump-qeth.diff</a></p>
+                  <p>Download program:</p>
+                  <p><a href="/files/tcpdump-qeth">tcpdump-qeth</a></p>
+                  <p>Change History:</p>
+<br>
+                  <table class="tbl">
+                    <tr>
+                      <td class="col1">Date</td>
+                      <td class="col2">Change</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2010-08-25</td>
+                      <td class="col2">Updated to support -s argument</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2003-04-16</td>
+                      <td class="col2">Initial distribution</td>
+                    </tr>
+                  </table>

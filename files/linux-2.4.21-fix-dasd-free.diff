@@ -1,0 +1,62 @@
+diff -ruN linux-2.4.21.orig/drivers/s390/block/dasd_diag.c linux-2.4.21/drivers/s390/block/dasd_diag.c
+--- linux-2.4.21.orig/drivers/s390/block/dasd_diag.c	2003-07-13 21:37:47.000000000 -0500
++++ linux-2.4.21/drivers/s390/block/dasd_diag.c	2003-07-13 21:32:47.000000000 -0500
+@@ -269,7 +269,7 @@
+ 	dasd_diag_private_t *private;
+ 	diag210_t *rdc_data;
+ 	ccw_req_t *cqr;
+-	long *label;
++	long *label = NULL;
+ 	int sb;
+ 
+ 	if (device == NULL) {
+@@ -396,6 +396,8 @@
+ 	goto out;
+  fail:
+         if ( rc ) {
++                if (label)
++                        free_page ((unsigned long) label);
+                 kfree (device->private);
+                 device->private = NULL;
+         }
+@@ -510,7 +512,7 @@
+ static char *
+ dasd_diag_dump_sense (struct dasd_device_t *device, ccw_req_t * req)
+ {
+-	char *page = (char *) get_free_page (GFP_KERNEL);
++	char *page = (char *) get_free_page (GFP_ATOMIC);
+ 	int len;
+ 	if (page == NULL) {
+ 		return NULL;
+@@ -519,7 +521,8 @@
+ 		       "device %04X on irq %d: I/O status report:\n",
+ 		       device->devinfo.devno, device->devinfo.irq);
+ 
+-	return page;
++	free_page ((unsigned long) page);
++	return NULL;
+ }
+ 
+ dasd_discipline_t dasd_diag_discipline = {
+diff -ruN linux-2.4.21.orig/drivers/s390/block/dasd_fba.c linux-2.4.21/drivers/s390/block/dasd_fba.c
+--- linux-2.4.21.orig/drivers/s390/block/dasd_fba.c	2003-07-13 21:37:38.000000000 -0500
++++ linux-2.4.21/drivers/s390/block/dasd_fba.c	2003-07-13 21:32:47.000000000 -0500
+@@ -412,7 +412,7 @@
+ static char *
+ dasd_fba_dump_sense (struct dasd_device_t *device, ccw_req_t * req)
+ {
+-	char *page = (char *) get_free_page (GFP_KERNEL);
++	char *page = (char *) get_free_page (GFP_ATOMIC);
+ 	int len;
+ 	if (page == NULL) {
+ 		return NULL;
+@@ -421,7 +421,8 @@
+ 		       "device %04X on irq %d: I/O status report:\n",
+ 		       device->devinfo.devno, device->devinfo.irq);
+ 
+-	return page;
++	free_page ((unsigned long) page);
++	return NULL;
+ }
+ 
+ dasd_discipline_t dasd_fba_discipline = {

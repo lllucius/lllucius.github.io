@@ -1,0 +1,29 @@
+---
+layout: page
+title: Multiple Configuration Boot Support
+permalink: /zlinux/multiboot/
+---
+                  <h2>{{page.title}}</h2>
+                  <p>The &quot;multiboot&quot; patch adds the ability to IPL different configurations from the same device using the LOADPARM parameter on VMs IPL command or the &quot;Load Parameter&quot; field on the Hardware Management Console.</p>
+                  <p>It is especially useful when IPLing zLinux in an LPAR. You may setup several configs in /etc/zipl.conf, like a known good one, a test one, and one that IPLs into single user mode. Then, if something untoward happens while testing, you have alternatives to get zLinux back up.<br />
+                    <br />
+                    You can even maintain 1 zipl.conf to be used by several LPARs and/or VM guests.</p>
+                  <p>The patch applies to <a href="http://www10.software.ibm.com/developerworks/opensource/linux390/index.shtml">s390-tools-1.1.6</a>.</p>
+                  <p>Download:</p>
+                  <p><a href="/files/multiboot-03.077.diff">multiboot-03.077.diff</a></p>
+                  <p>Change History:</p>
+<br>
+                  <table class="tbl">
+                    <tr>
+                      <td class="col1">Date</td>
+                      <td class="col2">Change</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2003-03-17</td>
+                      <td class="col2">Added a suggestion by Jan J. and cleaned up some other things.&nbsp; See README.multiboot for details.</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2003-03-14</td>
+                      <td class="col2">Initial distribution</td>
+                    </tr>
+                  </table>

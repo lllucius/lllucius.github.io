@@ -1,0 +1,6 @@
+---
+layout: post
+date:   2005-06-29
+categories:
+---
+A couple of minor updates to <a href="zvm/vma">VMA</a>.

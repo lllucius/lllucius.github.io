@@ -1,0 +1,6 @@
+---
+layout: post
+date:   2008-11-06
+categories:
+---
+A few changes made to <a href="rexx/txt2pdf">TXT2PDF</a>.

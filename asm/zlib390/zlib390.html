@@ -1,0 +1,36 @@
+---
+layout: page
+title: zlib390
+permalink: /asm/zlib390/
+---
+                  <h2>{{page.title}}</h2>
+                  <p>zlib390 is a distribution providing version 1.1.4 of the <a href="http://www.zlib.org">zlib</a> compression library.&nbsp; It is targeted at the IBM 9672-G3+, zSeries, and compatible mainframes.</p>
+                  <p>What makes this distribution different is that it isn't just a plain recompile of the zlib sources using one of the typical mainframe C compilers.&nbsp; zlib390 is built using <a href="http://gcc.gnu.org">GCC</a> and Tachyon Software's <a href="http://www.tachyonsoft.com/gcc.html">TAS</a> assembler to provide a library which does not require any runtime support and may be used in environments that disallow the use of SVCs and other direct OS interaction.</p>
+                  <p>Download:</p>
+                  <p><a href="/files/zlib390-02.343.tar.gz">zlib390-02.343.tar.gz</a><br />
+                    <a href="/files/zlib390-02.343-asm.tar.gz">zlib390-02.343-asm.tar.gz</a> (GCC assembler code...only needed if interested)<br />
+                    <a href="/files/zlib390-02.343-lst.tar.gz">zlib390-02.343-lst.tar.gz</a> (TAS assembly listings...only needed if interested)</p>
+                  <p>Change History:</p>
+<br>
+                  <table class="tbl">
+                    <tr>
+                      <td class="col1">Date</td>
+                      <td class="col2">Change</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2002-12-09</td>
+                      <td class="col2">Merged OBJ and JCL datasets into one.</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2002-12-08</td>
+                      <td class="col2">Mostly just cleanup</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2002-12-05</td>
+                      <td class="col2">Fixed ASCII strings and added a new test program</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2002-10-08</td>
+                      <td class="col2">Initial implementation</td>
+                    </tr>
+                  </table>

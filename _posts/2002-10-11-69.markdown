@@ -1,0 +1,6 @@
+---
+layout: post
+date:   2002-10-11
+categories:
+---
+Added <a href="asm/encode85">encode85</a> to the Assembler section

@@ -1,0 +1,19 @@
+diff -ruN linux-2.4.19.orig/drivers/s390/misc/chandev.c linux-2.4.19/drivers/s390/misc/chandev.c
+--- linux-2.4.19.orig/drivers/s390/misc/chandev.c	2003-06-10 01:35:24.000000000 -0500
++++ linux-2.4.19/drivers/s390/misc/chandev.c	2003-06-10 01:42:02.000000000 -0500
+@@ -2470,6 +2470,7 @@
+ 					goto BadArgs;
+ 					
+ 				}
++				break;
+ 			case del_auto_msck_stridx*stridx_mult:
+ 			case (del_auto_msck_stridx*stridx_mult)|iscomma:
+ 				switch(ints[0])
+@@ -2482,6 +2483,7 @@
+ 				default:
+ 					goto BadArgs;
+ 				}
++				break;
+ 			case del_noauto_stridx*stridx_mult:
+ 				chandev_free_all_list((list **)&chandev_noauto_head);
+ 				break;

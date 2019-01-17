@@ -1,0 +1,6 @@
+---
+layout: post
+date:   2003-03-17
+categories:
+---
+Updated <a href="zlinux/multiboot">MultiBoot</a> patch

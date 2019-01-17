@@ -1,0 +1,6 @@
+---
+layout: post
+date:   2010-08-07
+categories:
+---
+Fixed a critter in <a href="zvm/kaos">KAOS</a> when more than 58 servers were defined.

@@ -1,0 +1,6 @@
+---
+layout: post
+date:   2007-01-12
+categories:
+---
+New version of <a href="zvm/vma">VMA</a>.

@@ -1,0 +1,6 @@
+---
+layout: post
+date:   2011-02-11
+categories:
+---
+Added the <a href="zvm/smcli">smcli</a> z/VM system managment command line utility

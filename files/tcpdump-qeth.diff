@@ -1,0 +1,41 @@
+--- sbin/tcpdump-qeth	2010-08-25 09:35:45.000000000 -0500
++++ tcpdump	2010-08-25 09:37:26.000000000 -0500
+@@ -17,32 +17,31 @@
+   $incmd = "cat $options{'r'}";
+   $filter_out = 1;
+ } else {
+-  $incmd = "tcpdump -l -w -";
+-  $filter_out = 0;
++  $incmd = "/usr/sbin/tcpdump -l -w -";
++  $filter_out = 1;
+   if ( defined($options{'i'}) ) {
+     $incmd .= " -i ".$options{'i'};
+     delete $options{'i'}; # remove -i option from option list
+   }
+-  foreach $key (@ARGV) {
+-    $incmd .= " $key";
+-  }
+ }
+ 
+-$outcmd = "tcpdump -r -";
++$outcmd = "/usr/sbin/tcpdump -r -";
+ # Rebuild arglist for the writer process
+ delete $options{'r'}; # remove -r option from option list
+ foreach $key (keys %options) {
+   if ((index "adeflnNOpqRStuvxX",$key) >= 0 ) {
+     $outcmd .= " -$key";
++  } elsif ((index "s",$key) >= 0 ) {
++    $incmd .= " -$key $options{$key}";
+   } else {
+     $outcmd .= " -$key $options{$key}";
+   }
++}
+   if ( $filter_out == 1 ) {
+     foreach $key (@ARGV) {
+       $outcmd .= " $key";
+     }
+   }
+-} 
+ 
+ open READER,"$incmd|" or die "Cannot spawn reader command $incmd";
+ open WRITER,"|$outcmd" or die "Cannot spawn writer command $outcmd";

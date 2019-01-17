@@ -1,0 +1,38 @@
+---
+layout: page
+title: smcli - z/VM System Management API command line utilit
+permalink: /zvm/smcli/
+---
+                  <h2>{{page.title}}</h2>
+                  <p>smcli is a bash script that provides a command line interface to the
+                     z/VM System Management API.&nbsp;&nbsp;Both TCP/IP and IUCV transport mechanisms
+                     are supported as well as 113 of the 114 functions at the z/VM 6.1 level.
+                     (Check_Authorization doesn't follow the same API as the rest.)
+                  <p>I needed a few of the SMAPI functions for a project, but once I started,
+                     I couldn't stop and it soon became a huge educational exercise as I
+                     learned a lot of new bash scripting techniques.</p>
+                  <p>I also wanted to see if I could do most of it in bash and not rely on
+                     too many external programs.&nbsp;&nbsp;I was able to get away with only using 5
+                     external programs and 2 of those could even be implemented in the script,
+                     but I left them for speed.&nbsp;&nbsp;The 5th is the IUCV helper utility embedded in
+                     the script (build it using "smcli smiucv").</p>
+                  <p>Download smcli-11.048a:</p>
+                  <p>
+                     <a href="/files/smcli-11.048a.gz">smcli-11.048a.gz</a>
+                  </p>
+                  <p>Change History:</p>
+                  <br>
+                  <table class="tbl">
+                    <tr>
+                      <td class="col1">Date</td>
+                      <td class="col2">Change</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2011-02-17</td>
+                      <td class="col2">Added some brief usage comments</td>
+                    </tr>
+                    <tr>
+                      <td class="col1">2011-02-11</td>
+                      <td class="col2">First release</td>
+                    </tr>
+                  </table>

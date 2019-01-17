@@ -1,0 +1,380 @@
+diff -ruN linux-2.4.21.orig/Documentation/s390/s390dbf.txt linux-2.4.21/Documentation/s390/s390dbf.txt
+--- linux-2.4.21.orig/Documentation/s390/s390dbf.txt	2001-10-11 11:04:57.000000000 -0500
++++ linux-2.4.21/Documentation/s390/s390dbf.txt	2003-07-24 01:48:25.000000000 -0500
+@@ -168,6 +168,20 @@
+ 
+ Return Value:  Address of written debug entry
+ 
++Description:   writes debug entry with processed string and varargs to 
++               active debug area (if level $<=$ actual debug level). 
++
++---------------------------------------------------------------------------
++debug_entry_t* debug_unsafe_sprintf_event (debug_info_t * id, int level, 
++                                           char* string,...);
++
++Parameter:     id:    handle for debug log 
++               level: debug level
++               string: format string for debug entry 
++               ...: varargs used as in sprintf()
++
++Return Value:  Address of written debug entry
++
+ Description:   writes debug entry with format string and varargs (longs) to 
+                active debug area (if level $<=$ actual debug level). 
+                floats and long long datatypes cannot be used as varargs.
+@@ -227,6 +241,21 @@
+ 
+ Return Value:  Address of written debug entry 
+ 
++Description:   writes debug entry with processed string and varargs to 
++               active debug area (if level $<=$ actual debug level) and
++               switches to next debug area. 
++
++---------------------------------------------------------------------------
++debug_entry_t* debug_unsafe_sprintf_exception (debug_info_t * id, int level,
++                                               char* string,...);
++
++Parameter:     id:    handle for debug log  
++               level: debug level  
++               string: format string for debug entry  
++               ...: varargs used as in sprintf()
++
++Return Value:  Address of written debug entry 
++
+ Description:   writes debug entry with format string and varargs (longs) to 
+                active debug area (if level $<=$ actual debug level) and
+                switches to next debug area. 
+diff -ruN linux-2.4.21.orig/arch/s390/kernel/debug.c linux-2.4.21/arch/s390/kernel/debug.c
+--- linux-2.4.21.orig/arch/s390/kernel/debug.c	2003-07-21 23:45:45.000000000 -0500
++++ linux-2.4.21/arch/s390/kernel/debug.c	2003-07-24 00:27:54.000000000 -0500
+@@ -859,6 +859,72 @@
+                                    int level,char *string,...)
+ {
+ 	va_list   ap;
++	int alloc_size,len;
++	debug_sprintf_entry *curr_event;
++	debug_entry_t *retval = NULL;
++        char buf[1];
++
++	if((!id) || (level > id->level))
++		return NULL;
++	else {
++                va_start(ap,string);
++                len=vsnprintf(buf,0,string,ap)+1;
++                alloc_size=len+sizeof(debug_sprintf_entry);
++                va_end(ap);
++		curr_event=alloca(alloc_size);
++
++		if(curr_event){
++			va_start(ap,string);
++			vsnprintf((char *)&curr_event->args[0],len,string,ap);
++			va_end(ap);
++			curr_event->string = (char *)-1;
++			retval=debug_common(id,level, curr_event,alloc_size,0);
++		}
++		return retval;
++	}
++}
++
++/*
++ * debug_sprintf_exception:
++ */
++
++debug_entry_t *debug_sprintf_exception(debug_info_t* id,
++                                       int level,char *string,...)
++{
++	va_list   ap;
++	int alloc_size,len;
++	debug_sprintf_entry *curr_event;
++	debug_entry_t *retval = NULL;
++        char buf[1];
++
++	if((!id) || (level > id->level))
++		return NULL;
++	else {
++                va_start(ap,string);
++                len=vsnprintf(buf,0,string,ap)+1;
++                alloc_size=len+sizeof(debug_sprintf_entry);
++                va_end(ap);
++		curr_event=alloca(alloc_size);
++
++		if(curr_event){
++			va_start(ap,string);
++			vsnprintf((char *)&curr_event->args[0],len,string,ap);
++			va_end(ap);
++			curr_event->string = (char *)-1;
++			retval=debug_common(id,level, curr_event,alloc_size,1);
++		}
++		return retval;
++	}
++}
++
++/*
++ * debug_unsafe_sprintf_event:
++ */
++
++debug_entry_t *debug_unsafe_sprintf_event(debug_info_t* id,
++                                          int level,char *string,...)
++{
++	va_list   ap;
+ 	int numargs,alloc_size,idx;
+ 	debug_sprintf_entry *curr_event;
+ 	debug_entry_t *retval = NULL;
+@@ -883,11 +949,11 @@
+ }
+ 
+ /*
+- * debug_sprintf_exception:
++ * debug_unsafe_sprintf_exception:
+  */
+ 
+-debug_entry_t *debug_sprintf_exception(debug_info_t* id,
+-                                       int level,char *string,...)
++debug_entry_t *debug_unsafe_sprintf_exception(debug_info_t* id,
++                                              int level,char *string,...)
+ {
+ 	va_list   ap;
+ 	int numargs,alloc_size,idx;
+@@ -1243,6 +1309,13 @@
+ 	int num_longs, num_used_args = 0,i, rc = 0;
+ 	int index[DEBUG_SPRINTF_MAX_ARGS];
+ 
++        /* check for preprocessed string */
++	if(curr_event->string == (char *)-1) {
++		strcpy(out_buf, (char *)&curr_event->args[0]);
++		rc = strlen(out_buf);
++		goto out;
++	}
++
+ 	/* count of longs fit into one entry */
+ 	num_longs = id->buf_size /  sizeof(long); 
+ 
+@@ -1322,3 +1395,5 @@
+ EXPORT_SYMBOL(debug_sprintf_view);
+ EXPORT_SYMBOL(debug_sprintf_exception);
+ EXPORT_SYMBOL(debug_sprintf_event);
++EXPORT_SYMBOL(debug_unsafe_sprintf_exception);
++EXPORT_SYMBOL(debug_unsafe_sprintf_event);
+diff -ruN linux-2.4.21.orig/arch/s390x/kernel/debug.c linux-2.4.21/arch/s390x/kernel/debug.c
+--- linux-2.4.21.orig/arch/s390x/kernel/debug.c	2003-07-21 23:45:45.000000000 -0500
++++ linux-2.4.21/arch/s390x/kernel/debug.c	2003-07-24 00:26:18.000000000 -0500
+@@ -859,6 +859,72 @@
+                                    int level,char *string,...)
+ {
+ 	va_list   ap;
++	int alloc_size,len;
++	debug_sprintf_entry *curr_event;
++	debug_entry_t *retval = NULL;
++        char buf[1];
++
++	if((!id) || (level > id->level))
++		return NULL;
++	else {
++                va_start(ap,string);
++                len=vsnprintf(buf,0,string,ap)+1;
++                alloc_size=len+sizeof(debug_sprintf_entry);
++                va_end(ap);
++		curr_event=alloca(alloc_size);
++
++		if(curr_event){
++			va_start(ap,string);
++			vsnprintf((char *)&curr_event->args[0],len,string,ap);
++			va_end(ap);
++			curr_event->string = (char *)-1;
++			retval=debug_common(id,level, curr_event,alloc_size,0);
++		}
++		return retval;
++	}
++}
++
++/*
++ * debug_sprintf_exception:
++ */
++
++debug_entry_t *debug_sprintf_exception(debug_info_t* id,
++                                       int level,char *string,...)
++{
++	va_list   ap;
++	int alloc_size,len;
++	debug_sprintf_entry *curr_event;
++	debug_entry_t *retval = NULL;
++        char buf[1];
++
++	if((!id) || (level > id->level))
++		return NULL;
++	else {
++                va_start(ap,string);
++                len=vsnprintf(buf,0,string,ap)+1;
++                alloc_size=len+sizeof(debug_sprintf_entry);
++                va_end(ap);
++		curr_event=alloca(alloc_size);
++
++		if(curr_event){
++			va_start(ap,string);
++			vsnprintf((char *)&curr_event->args[0],len,string,ap);
++			va_end(ap);
++			curr_event->string = (char *)-1;
++			retval=debug_common(id,level, curr_event,alloc_size,1);
++		}
++		return retval;
++	}
++}
++
++/*
++ * debug_unsafe_sprintf_event:
++ */
++
++debug_entry_t *debug_unsafe_sprintf_event(debug_info_t* id,
++                                          int level,char *string,...)
++{
++	va_list   ap;
+ 	int numargs,alloc_size,idx;
+ 	debug_sprintf_entry *curr_event;
+ 	debug_entry_t *retval = NULL;
+@@ -883,11 +949,11 @@
+ }
+ 
+ /*
+- * debug_sprintf_exception:
++ * debug_unsafe_sprintf_exception:
+  */
+ 
+-debug_entry_t *debug_sprintf_exception(debug_info_t* id,
+-                                       int level,char *string,...)
++debug_entry_t *debug_unsafe_sprintf_exception(debug_info_t* id,
++                                              int level,char *string,...)
+ {
+ 	va_list   ap;
+ 	int numargs,alloc_size,idx;
+@@ -1243,6 +1309,13 @@
+ 	int num_longs, num_used_args = 0,i, rc = 0;
+ 	int index[DEBUG_SPRINTF_MAX_ARGS];
+ 
++        /* check for preprocessed string */
++	if(curr_event->string == (char *)-1) {
++		strcpy(out_buf, (char *)&curr_event->args[0]);
++		rc = strlen(out_buf);
++		goto out;
++	}
++
+ 	/* count of longs fit into one entry */
+ 	num_longs = id->buf_size /  sizeof(long); 
+ 
+@@ -1322,3 +1395,5 @@
+ EXPORT_SYMBOL(debug_sprintf_view);
+ EXPORT_SYMBOL(debug_sprintf_exception);
+ EXPORT_SYMBOL(debug_sprintf_event);
++EXPORT_SYMBOL(debug_unsafe_sprintf_exception);
++EXPORT_SYMBOL(debug_unsafe_sprintf_event);
+diff -ruN linux-2.4.21.orig/drivers/s390/block/dasd.c linux-2.4.21/drivers/s390/block/dasd.c
+--- linux-2.4.21.orig/drivers/s390/block/dasd.c	2003-07-21 23:46:01.000000000 -0500
++++ linux-2.4.21/drivers/s390/block/dasd.c	2003-07-24 01:42:03.000000000 -0500
+@@ -4038,7 +4048,7 @@
+         device->debug_area = debug_register (device->name, 
+                                              0,     /* size of debug area */
+                                              2,     /* number of areas */
+-                                             8 * sizeof (long));
++                                             128);
+ 
+         debug_register_view (device->debug_area, 
+                              &debug_sprintf_view);
+@@ -5310,7 +5388,7 @@
+ 	dasd_debug_area = debug_register (DASD_NAME, 
+                                           0,     /* size of debug area */
+                                           2,     /* number of areas */
+-                                          8 * sizeof (long));
++                                          128);
+ 
+ 	debug_register_view (dasd_debug_area, 
+                              &debug_sprintf_view);
+diff -ruN linux-2.4.21.orig/drivers/s390/char/tape_core.c linux-2.4.21/drivers/s390/char/tape_core.c
+--- linux-2.4.21.orig/drivers/s390/char/tape_core.c	2003-07-21 23:46:02.000000000 -0500
++++ linux-2.4.21/drivers/s390/char/tape_core.c	2003-07-24 01:50:03.000000000 -0500
+@@ -1239,7 +1239,7 @@
+ static int
+ tape_init (void)
+ {
+-	tape_dbf_area = debug_register ( "tape", 1, 2, 4*sizeof(long));
++	tape_dbf_area = debug_register ( "tape", 1, 2, 128);
+ 	debug_register_view(tape_dbf_area, &debug_sprintf_view);
+ 	debug_set_level(tape_dbf_area, 6); /* FIXME */
+ 	DBF_EVENT(3, "tape init: ($Revision: 1.7.4.2 $)\n");
+diff -ruN linux-2.4.21.orig/drivers/s390/net/lcs.c linux-2.4.21/drivers/s390/net/lcs.c
+--- linux-2.4.21.orig/drivers/s390/net/lcs.c	2003-07-21 23:46:04.000000000 -0500
++++ linux-2.4.21/drivers/s390/net/lcs.c	2003-07-24 01:50:35.000000000 -0500
+@@ -3646,7 +3646,7 @@
+ lcs_debug_register(void)
+ {
+ 	if (lcs_id == NULL) {
+-		lcs_id = debug_register("lcs", 1, 16, 16 * sizeof (long));
++		lcs_id = debug_register("lcs", 1, 16, 128);
+ 		debug_register_view(lcs_id, &debug_sprintf_view);
+ 		debug_set_level(lcs_id, 0);
+ 	}
+diff -ruN linux-2.4.21.orig/drivers/s390/s390io.c linux-2.4.21/drivers/s390/s390io.c
+--- linux-2.4.21.orig/drivers/s390/s390io.c	2003-07-21 23:46:02.000000000 -0500
++++ linux-2.4.21/drivers/s390/s390io.c	2003-07-24 01:49:12.000000000 -0500
+@@ -8055,7 +8055,7 @@
+ {
+ 	int ret = 0;
+ 
+-	cio_debug_msg_id = debug_register ("cio_msg", 4, 4, 16 * sizeof (long));
++	cio_debug_msg_id = debug_register ("cio_msg", 4, 4, 128);
+ 	if (cio_debug_msg_id != NULL) {
+ 		debug_register_view (cio_debug_msg_id, &debug_sprintf_view);
+ 		debug_set_level (cio_debug_msg_id, 6);
+@@ -8069,7 +8069,7 @@
+ 	} else {
+ 		ret = -1;
+ 	}
+-	cio_debug_crw_id = debug_register ("cio_crw", 2, 4, 16 * sizeof (long));
++	cio_debug_crw_id = debug_register ("cio_crw", 2, 4, 128);
+ 	if (cio_debug_crw_id != NULL) {
+ 		debug_register_view (cio_debug_crw_id, &debug_sprintf_view);
+ 		debug_set_level (cio_debug_crw_id, 6);
+diff -ruN linux-2.4.21.orig/include/asm-s390/debug.h linux-2.4.21/include/asm-s390/debug.h
+--- linux-2.4.21.orig/include/asm-s390/debug.h	2002-08-02 19:39:45.000000000 -0500
++++ linux-2.4.21/include/asm-s390/debug.h	2003-07-24 00:25:12.000000000 -0500
+@@ -162,6 +162,9 @@
+ extern debug_entry_t *
+ debug_sprintf_event(debug_info_t* id,int level,char *string,...);
+ 
++extern debug_entry_t *
++debug_unsafe_sprintf_event(debug_info_t* id,int level,char *string,...);
++
+ 
+ extern inline debug_entry_t* 
+ debug_exception(debug_info_t* id, int level, void* data, int length)
+@@ -197,6 +200,9 @@
+ extern debug_entry_t *
+ debug_sprintf_exception(debug_info_t* id,int level,char *string,...);
+ 
++extern debug_entry_t *
++debug_unsafe_sprintf_exception(debug_info_t* id,int level,char *string,...);
++
+ int debug_register_view(debug_info_t* id, struct debug_view* view);
+ int debug_unregister_view(debug_info_t* id, struct debug_view* view);
+ 
+diff -ruN linux-2.4.21.orig/include/asm-s390x/debug.h linux-2.4.21/include/asm-s390x/debug.h
+--- linux-2.4.21.orig/include/asm-s390x/debug.h	2002-08-02 19:39:45.000000000 -0500
++++ linux-2.4.21/include/asm-s390x/debug.h	2003-07-24 00:25:38.000000000 -0500
+@@ -162,6 +162,9 @@
+ extern debug_entry_t *
+ debug_sprintf_event(debug_info_t* id,int level,char *string,...);
+ 
++extern debug_entry_t *
++debug_unsafe_sprintf_event(debug_info_t* id,int level,char *string,...);
++
+ 
+ extern inline debug_entry_t* 
+ debug_exception(debug_info_t* id, int level, void* data, int length)
+@@ -197,6 +200,9 @@
+ extern debug_entry_t *
+ debug_sprintf_exception(debug_info_t* id,int level,char *string,...);
+ 
++extern debug_entry_t *
++debug_unsafe_sprintf_exception(debug_info_t* id,int level,char *string,...);
++
+ int debug_register_view(debug_info_t* id, struct debug_view* view);
+ int debug_unregister_view(debug_info_t* id, struct debug_view* view);
+ 

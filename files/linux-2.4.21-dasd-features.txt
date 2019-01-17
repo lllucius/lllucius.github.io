@@ -1,0 +1,71 @@
+
+Here's a patch that "fixes" a few parsing problems in dasd.c and adds a couple of new
+features.
+
+The first addition is the ability to reserve devices for use by the DIAG dscipline.
+You do this by adding "diag" to the feature list when adding ranges.
+
+So, on the kernel command line you'd use:
+
+    dasd=900-910(diag)
+
+And in /proc/dasd/devices:
+
+    add range=900-910(diag)
+
+Either of these will prevent any other driver from commandeering the devices, thus reserving
+them for the DIAG discipline.
+
+The other addition is the ability to toggle the read-only and diag features of a range.  Just
+echo the following to /proc/dasd/devices:
+
+    readonly range=900-910 off
+    readonly range=900-910 on
+    usediag range=900-910 off
+    usediag range=900-910 on
+
+Here's a list of all the changes:
+
+dasd.c/dasd_strtoul():
+    (fix) handling of multiple range features was incorrect, ie:
+          add range=900-910(ro:ro:ro:ro:ro)
+    (fix) feature terminator (closing paren) would confuse "set" and "brk" routines, ie:
+          set range=900(ro) on
+    (add) DASD_FEATURE_USEDIAG handling
+
+dasd.c/dasd_features_from_devno():
+    (fix) unnecessary "devindex" code removed
+
+dasd.c/dasd_find_disc():
+    (add) DASD_FEATURE_USEDIAG handling
+
+dasd.c/dasd_state_new_to_del():
+    (add) DASD_FEATURE_USEDIAG handling
+
+dasd.c/dasd_devices_open():
+    (add) DASD_FEATURE_USEDIAG handling
+
+dasd.c/dasd_parse_range():
+    (add) moved range validation from proc_* handlers
+    (fix) prevent swapped ranges, ie:
+          range=910-900 
+
+dasd.c/dasd_proc_set():
+    (del) moved range validation to dasd_parse_range()
+    (fix) don't allow settings like:
+          set range=900-910 offfff
+    (fix) "alowed" mispelled
+
+dasd.c/dasd_proc_feature():
+    (add) provide setting and unsetting of dasd features
+
+dasd.c/dasd_proc_add():
+    (del) moved range validation to dasd_parse_range()
+
+dasd.c/dasd_devices_write():
+    (add) provide setting "readonly" and "usediag" features, ie:
+          readonly range=900-910 on
+          usediag range=900-910 off
+
+dasd.h:
+    (add) new DASD_FEATURE_USEDIAG flag

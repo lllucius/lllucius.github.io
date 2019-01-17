@@ -1,0 +1,26 @@
+diff -ruN linux-2.4.19.orig/arch/s390/kernel/setup.c 
+linux-2.4.19/arch/s390/kern
+--- linux-2.4.19.orig/arch/s390/kernel/setup.c  Mon Feb 17 05:59:19 2003
++++ linux-2.4.19/arch/s390/kernel/setup.c       Thu Mar  6 15:30:16 2003
+@@ -123,7 +123,7 @@
+         dx = 0;
+         for (sx = 0; src[sx] != 0; sx++) {
+                 if (src[sx] == '"') continue;
+-                dst[dx++] = src[sx];
++                dst[dx++] = toupper(src[sx]);
+                 if (dx >= n) break;
+         }
+ }
+diff -ruN linux-2.4.19.orig/arch/s390x/kernel/setup.c
+linux-2.4.19/arch/s390x/ke
+--- linux-2.4.19.orig/arch/s390x/kernel/setup.c Mon Feb 17 05:59:19 2003  
++++ linux-2.4.19/arch/s390x/kernel/setup.c      Thu Mar  6 15:29:46 2003
+@@ -123,7 +123,7 @@
+         dx = 0;
+         for (sx = 0; src[sx] != 0; sx++) {
+                 if (src[sx] == '"') continue;
+-                dst[dx++] = src[sx];
++                dst[dx++] = toupper(src[sx]);
+                 if (dx >= n) break;
+         }
+ } 

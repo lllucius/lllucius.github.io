@@ -1,0 +1,34 @@
+diff -ruN linux-2.4.21.orig/fs/partitions/ibm.c linux-2.4.21/fs/partitions/ibm.c
+--- linux-2.4.21.orig/fs/partitions/ibm.c	2003-07-21 23:45:46.000000000 -0500
++++ linux-2.4.21/fs/partitions/ibm.c	2003-07-21 23:50:05.000000000 -0500
+@@ -98,6 +98,7 @@
+ 	char name[7] = {0,};
+ 	volume_label_t *vlabel;
+ 	unsigned char *data;
++	unsigned int label[14];
+ 	Sector sect;
+ 
+ 	if ( first_sector != 0 )
+@@ -124,11 +125,12 @@
+ 	if (data == NULL)
+ 		goto out_readerr;
+ 	strncpy (type, data, 4);
+-	if ((!info->FBA_layout) && (!strcmp(info->type, "ECKD")))
++	if ((!info->FBA_layout) && (!strncmp(info->type, "ECKD", 4)))
+ 		strncpy(name, data + 8, 6);
+ 	else
+ 		strncpy(name, data + 4, 6);
+ 	memcpy (vlabel, data, sizeof(volume_label_t));
++	memcpy (label, data, sizeof(label));
+ 	put_dev_sector(sect);
+ 
+ 	EBCASC(type, 4);
+@@ -141,8 +143,6 @@
+ 		/*
+ 		 * VM style CMS1 labeled disk
+ 		 */
+-		int *label = (int *) data;
+-
+ 		if (label[13] != 0) {
+ 			printk("CMS1/%8s(MDSK):", name);
+ 			/* disk is reserved minidisk */
