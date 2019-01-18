@@ -10,13 +10,18 @@
 -->
                <td width="85%%">
                   <p class="navtxt">
-                     <a class="navbutact" href="/zvm">z/VM</a>                     
-                     <a class="navbutact" href="/zlinux">zLinux</a>
-                     <a class="navbutact" href="/rexx">Rexx</a>
-                     <a class="navbutact" href="/esp32">ESP32</a>
-                     <a class="navbutact" href="/asm">Assembler</a>
-                     <a class="navbutact" href="/alexa">Alexa</a>
-                     <a class="navbutact" href="/">Home</a>
+                     {% assign nodes = page.permalink | split: '/' %}
+                     {% assign len = nodes | size %}
+                     {% for cat in site.cattext %}
+                        {% assign base = site.catbase[forloop.index0] %}
+                        {% assign act = '' %}
+                        {% if len == 0 and base == '' %}
+                           {% assign act = 'act' %}
+                        {% elsif nodes[1] == base %}
+                           {% assign act = 'act' %}
+                        {% endif %}
+                        <a class="navbut{{act}}" href="/{{base}}">{{cat}}</a>
+                     {% endfor %}
                   </p>
                </td>
             </tr>

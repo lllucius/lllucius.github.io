@@ -1,2 +1,16 @@
 exclude: ['.git', '.gitignore']
 githome: https://github.com/lllucius
+cattext: ['Home',
+          'Alexa',
+          'Assembler',
+          'ESP32',
+          'Rexx',
+          'zLinux',
+          'z/VM']
+catbase: ['',
+          'alexa',
+          'asm',
+          'esp32',
+          'rexx',
+          'zlinux',
+          'zvm']
