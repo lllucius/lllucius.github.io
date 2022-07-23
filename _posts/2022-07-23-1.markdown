@@ -3,4 +3,4 @@ layout: post
 date:   2022-07-23
 categories:
 ---
-Added minor check to VMA for missing parameter <a href="zvm/vma">VMA Utility</a>.
+Added missing command line parameter check to <a href="zvm/vma">VMA Utility</a>.
