@@ -3,4 +3,4 @@ layout: post
 date:   2005-05-13
 categories:
 ---
-Added a <a href="zlinux/vmparms">VMPARMS</a> patch that applies to zipl instead of the kernel.
+Added a <a href="zlinux/vmparms/">VMPARMS</a> patch that applies to zipl instead of the kernel.

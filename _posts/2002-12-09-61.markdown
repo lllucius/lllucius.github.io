@@ -3,4 +3,4 @@ layout: post
 date:   2002-12-09
 categories:
 ---
-Updated <a href="asm/zlibLE">zlibLE</a> and <a href="asm/bzlibLE">bzlibLE</a>
+Updated <a href="asm/zlibLE/">zlibLE</a> and <a href="asm/bzlibLE">bzlibLE</a>

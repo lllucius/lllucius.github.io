@@ -3,4 +3,4 @@ layout: post
 date:   2004-03-18
 categories:
 ---
-Released <a href="asm/md5">MD5</a> into the Public Domain.
+Released <a href="asm/md5/">MD5</a> into the Public Domain.

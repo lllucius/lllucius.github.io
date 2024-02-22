@@ -3,4 +3,4 @@ layout: post
 date:   2003-03-04
 categories:
 ---
-Updated <a href="zlinux/vmparms">VMPARM</a> patch
+Updated <a href="zlinux/vmparms/">VMPARM</a> patch

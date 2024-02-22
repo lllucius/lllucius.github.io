@@ -3,4 +3,4 @@ layout: post
 date:   2005-07-10
 categories:
 ---
-VMAWin is now VMAgui and is based on wxWidgets.&nbsp; Get the goodness <a href="zvm/vma">here</a>.
+VMAWin is now VMAgui and is based on wxWidgets.&nbsp; Get the goodness <a href="zvm/vma/">here</a>.

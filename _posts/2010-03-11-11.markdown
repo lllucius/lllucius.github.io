@@ -3,4 +3,4 @@ layout: post
 date:   2010-03-11
 categories:
 ---
-Added support for creating/updating VMARCs to <a href="zvm/vma">VMA</a>.
+Added support for creating/updating VMARCs to <a href="zvm/vma/">VMA</a>.

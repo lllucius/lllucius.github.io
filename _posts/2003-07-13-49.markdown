@@ -3,4 +3,4 @@ layout: post
 date:   2003-07-13
 categories:
 ---
-Updated <a href="asm/encode64">encode64</a> function
+Updated <a href="asm/encode64/">encode64</a> function

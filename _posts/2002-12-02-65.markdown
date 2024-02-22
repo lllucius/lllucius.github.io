@@ -3,4 +3,4 @@ layout: post
 date:   2002-12-02
 categories:
 ---
-Many updates to <a href="rexx/txt2pdf">TXT2PDF</a>
+Many updates to <a href="rexx/txt2pdf/">TXT2PDF</a>

@@ -3,4 +3,4 @@ layout: post
 date:   2002-10-26
 categories:
 ---
-Added ASCII carriage control support to <a href="rexx/txt2pdf">TXT2PDF</a>
+Added ASCII carriage control support to <a href="rexx/txt2pdf/">TXT2PDF</a>

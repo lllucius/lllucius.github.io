@@ -3,4 +3,4 @@ layout: post
 date:   2005-06-23
 categories:
 ---
-New release of <a href="zvm/vma">VMA</a> and it now includes the Windows GUI version.
+New release of <a href="zvm/vma/">VMA</a> and it now includes the Windows GUI version.

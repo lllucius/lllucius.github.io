@@ -3,4 +3,4 @@ layout: post
 date:   2002-12-09
 categories:
 ---
-Added <a href="asm/hetutl">HETUTL</a> to the Assembler section
+Added <a href="asm/hetutl/">HETUTL</a> to the Assembler section

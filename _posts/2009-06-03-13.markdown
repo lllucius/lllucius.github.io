@@ -3,4 +3,4 @@ layout: post
 date:   2009-06-03
 categories:
 ---
-Added Windows command line version to <a href="zvm/vma">VMA</a>.
+Added Windows command line version to <a href="zvm/vma/">VMA</a>.

@@ -3,4 +3,4 @@ layout: post
 date:   2006-04-23
 categories:
 ---
-New Mac version of VMAgui.&nbsp; Get the goodness <a href="zvm/vma">here</a>.
+New Mac version of VMAgui.&nbsp; Get the goodness <a href="zvm/vma/">here</a>.

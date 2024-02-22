@@ -3,4 +3,4 @@ layout: post
 date:   2005-06-27
 categories:
 ---
-Added a couple more options to <a href="zvm/vma">VMA</a>.
+Added a couple more options to <a href="zvm/vma/">VMA</a>.

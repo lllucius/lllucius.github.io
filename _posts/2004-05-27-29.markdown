@@ -3,4 +3,4 @@ layout: post
 date:   2004-05-27
 categories:
 ---
-Added a version of <a href="zlinux/vmparms">VMPARMS</a> for the Linux 2.6.5 kernel.
+Added a version of <a href="zlinux/vmparms/">VMPARMS</a> for the Linux 2.6.5 kernel.

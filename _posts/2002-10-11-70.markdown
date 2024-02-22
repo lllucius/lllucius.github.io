@@ -3,4 +3,4 @@ layout: post
 date:   2002-10-11
 categories:
 ---
-Added <a href="asm/md5">md5</a> to the Assembler section
+Added <a href="asm/md5/">md5</a> to the Assembler section

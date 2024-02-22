@@ -3,4 +3,4 @@ layout: post
 date:   2010-02-24
 categories:
 ---
-Added the <a href="zvm/kaos">KAOS</a> system activation utility.
+Added the <a href="zvm/kaos/">KAOS</a> system activation utility.

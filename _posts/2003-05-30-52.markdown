@@ -3,4 +3,4 @@ layout: post
 date:   2003-05-30
 categories:
 ---
-Added small <a href="zvm/qdi">patch</a> to John Hartmann's <a href="http://vm.marist.edu/~pipeline/index.html#QDI">QDI syntax highlighter</a>
+Added small <a href="zvm/qdi/">patch</a> to John Hartmann's <a href="http://vm.marist.edu/~pipeline/index.html#QDI">QDI syntax highlighter</a>

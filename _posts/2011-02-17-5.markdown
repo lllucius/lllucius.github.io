@@ -3,4 +3,4 @@ layout: post
 date:   2011-02-17
 categories:
 ---
-Added some brief usage comments to <a href="zvm/smcli">smcli</a>
+Added some brief usage comments to <a href="zvm/smcli/">smcli</a>

@@ -3,4 +3,4 @@ layout: post
 date:   2005-06-16
 categories:
 ---
-Updated the <a href="zvm/vma">VMA</a> utility.
+Updated the <a href="zvm/vma/">VMA</a> utility.

@@ -3,4 +3,4 @@ layout: post
 date:   2004-05-26
 categories:
 ---
-Several features added to <a href="rexx/txt2pdf">TXT2PDF</a> including image tiling, BMP support, and a few others.
+Several features added to <a href="rexx/txt2pdf/">TXT2PDF</a> including image tiling, BMP support, and a few others.

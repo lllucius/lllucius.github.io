@@ -3,4 +3,4 @@ layout: post
 date:   2003-08-10
 categories:
 ---
-Added DRAW and IMAGE keywords, stdio handling, and CMS PIPELINE stage to <a href="rexx/txt2pdf">TXT2PDF</a>.
+Added DRAW and IMAGE keywords, stdio handling, and CMS PIPELINE stage to <a href="rexx/txt2pdf/">TXT2PDF</a>.

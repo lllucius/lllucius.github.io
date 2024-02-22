@@ -3,4 +3,4 @@ layout: post
 date:   2002-10-08
 categories:
 ---
-Added <a href="rexx/txt2pdf">TXT2PDF</a> to the REXX section
+Added <a href="rexx/txt2pdf/">TXT2PDF</a> to the REXX section

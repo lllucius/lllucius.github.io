@@ -3,4 +3,4 @@ layout: post
 date:   2004-03-03
 categories:
 ---
-Released <a href="asm/arc4">ARC4</a> into the Public Domain.
+Released <a href="asm/arc4/">ARC4</a> into the Public Domain.

@@ -3,4 +3,4 @@ layout: post
 date:   2012-03-20
 categories:
 ---
-Fixed a couple of critters in <a href="zvm/vma">VMA</a>.
+Fixed a couple of critters in <a href="zvm/vma/">VMA</a>.

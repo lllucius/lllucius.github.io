@@ -3,4 +3,4 @@ layout: post
 date:   2003-04-16
 categories:
 ---
-Added <a href="zlinux/tcpdump-qeth">tcpdump-qeth</a> wrapper patch and program
+Added <a href="zlinux/tcpdump-qeth/">tcpdump-qeth</a> wrapper patch and program

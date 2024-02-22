@@ -3,4 +3,4 @@ layout: post
 date:   2003-08-12
 categories:
 ---
-Added TEXT DRAW type and fixed a bug introduced with the 08/10 update to <a href="rexx/txt2pdf">TXT2PDF</a>.
+Added TEXT DRAW type and fixed a bug introduced with the 08/10 update to <a href="rexx/txt2pdf/">TXT2PDF</a>.

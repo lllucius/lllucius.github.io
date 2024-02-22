@@ -3,4 +3,4 @@ layout: post
 date:   2009-04-17
 categories:
 ---
-Several additions to <a href="rexx/txt2pdf">TXT2PDF</a>.
+Several additions to <a href="rexx/txt2pdf/">TXT2PDF</a>.

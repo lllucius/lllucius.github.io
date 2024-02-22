@@ -3,4 +3,4 @@ layout: post
 date:   2010-08-25
 categories:
 ---
-Added -s (snaplen) support to <a href="zlinux/tcpdump-qeth">tcpdump-qeth</a> wrapper
+Added -s (snaplen) support to <a href="zlinux/tcpdump-qeth/">tcpdump-qeth</a> wrapper

@@ -3,4 +3,4 @@ layout: post
 date:   2019-04-23
 categories:
 ---
-Bumped internal version number in <a href="rexx/txt2pdf">TXT2PDF</a> to avoid confusion.
+Bumped internal version number in <a href="rexx/txt2pdf/">TXT2PDF</a> to avoid confusion.

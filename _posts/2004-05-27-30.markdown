@@ -3,4 +3,4 @@ layout: post
 date:   2004-05-27
 categories:
 ---
-Uploaded the correct <a href="zlinux/vmparms">VMPARMS</a> patch this time.
+Uploaded the correct <a href="zlinux/vmparms/">VMPARMS</a> patch this time.

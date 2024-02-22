@@ -3,4 +3,4 @@ layout: post
 date:   2003-08-06
 categories:
 ---
-A few minor updates to <a href="rexx/txt2pdf">TXT2PDF</a> and the addition of a version in VMARC format.
+A few minor updates to <a href="rexx/txt2pdf/">TXT2PDF</a> and the addition of a version in VMARC format.

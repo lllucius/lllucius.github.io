@@ -3,4 +3,4 @@ layout: post
 date:   2003-02-19
 categories:
 ---
-Added <a href="zlinux">zLinux</a> section
+Added <a href="zlinux/">zLinux</a> section

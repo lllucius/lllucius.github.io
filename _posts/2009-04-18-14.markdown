@@ -3,4 +3,4 @@ layout: post
 date:   2009-04-18
 categories:
 ---
-The <a href="zvm/vma">VMA</a> GUI is now fully Unicode capable.
+The <a href="zvm/vma/">VMA</a> GUI is now fully Unicode capable.

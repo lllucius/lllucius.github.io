@@ -3,4 +3,4 @@ layout: post
 date:   2003-07-18
 categories:
 ---
-Added a couple more <a href="zlinux/kernelfixes">Kernel Fixes</a>
+Added a couple more <a href="zlinux/kernelfixes/">Kernel Fixes</a>

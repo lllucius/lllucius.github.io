@@ -3,4 +3,4 @@ layout: post
 date:   2003-06-10
 categories:
 ---
-Added <a href="zlinux/vipa_helpers">vipa-helpers</a> to the zLinux section
+Added <a href="zlinux/vipa_helpers/">vipa-helpers</a> to the zLinux section

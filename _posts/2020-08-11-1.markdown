@@ -3,4 +3,4 @@ layout: post
 date:   2020-08-11
 categories:
 ---
-Rebuilt and signed VMA for Mac Catalina <a href="zvm/vma">VMA Utility</a>.
+Rebuilt and signed VMA for Mac Catalina <a href="zvm/vma/">VMA Utility</a>.

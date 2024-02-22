@@ -3,4 +3,4 @@ layout: post
 date:   2003-03-14
 categories:
 ---
-Added <a href="zlinux/multiboot">MultiBoot</a> patch
+Added <a href="zlinux/multiboot/">MultiBoot</a> patch
