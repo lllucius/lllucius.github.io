@@ -1,0 +1,6 @@
+---
+layout: post
+date:   2026-09-16
+categories:
+---
+Berry van Sleeuwen noticed that the last VMARC for <a href="rexx/txt2pdf/">TXT2PDF</a> had duplicate files from different minidisks. He was kind enough to rebuild it since I no longer have access to a VM system.
